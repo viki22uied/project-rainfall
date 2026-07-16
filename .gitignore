@@ -12,3 +12,6 @@ venv/
 # OS/editor
 .DS_Store
 Thumbs.db
+
+# Generated import CSVs
+data/import/

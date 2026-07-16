@@ -1,0 +1,13 @@
+{
+  "name": "rainfall-data-prep",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "test": "node --test",
+    "build": "node src/build.js"
+  },
+  "dependencies": {
+    "double-metaphone": "^2.0.1"
+  }
+}
