@@ -28,12 +28,20 @@ module.exports = async (context, basicIO) => {
   const elevated = String(basicIO.getArgument('elevated')) === 'true';
 
   try {
-    // 1. Identify the actor: explicit arg (local/demo) first, else the logged-in Catalyst user.
-    let email = basicIO.getArgument('actor_email');
+    // 1. Identify the actor. NEVER trust a client-supplied identity in production:
+    //    only the authenticated Catalyst user counts. The actor_email override exists
+    //    solely for local/demo runs and is gated behind a server-side flag that is
+    //    unset in production (without it, a caller could impersonate any role).
+    let email;
+    if (process.env.ALLOW_ACTOR_EMAIL_OVERRIDE === 'true') email = basicIO.getArgument('actor_email');
     if (!email) {
       try { email = (await app.userManagement().getCurrentUser()).email_id; } catch (_) { /* no auth context */ }
     }
-    if (!email) return respond('failure', { error: 'no authenticated user' });
+    // Strict validation doubles as injection defense: a valid email contains no quotes,
+    // so the interpolation below cannot be broken out of.
+    if (!email || !/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(email)) {
+      return respond('failure', { error: 'no authenticated user' });
+    }
 
     const users = await zcql.executeZCQLQuery(
       `SELECT auth_email, role, station_code, district_name, is_active, revoked_at ` +

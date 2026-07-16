@@ -54,6 +54,10 @@ function decideAccess(user, request) {
 }
 
 // Turn a scope object into a ZCQL WHERE fragment (null = no restriction).
+// Values come from the authenticated user's own Users row (station_code / district_name),
+// not from request input. ZCQL has no bind-parameter API, so single quotes are escaped by
+// doubling ('') — the standard, sufficient escaping for a single-quoted string literal.
+// Keys are fixed column identifiers set in index.js, never client-supplied.
 function buildScopeFilter(scope) {
   if (!scope) return null;
   const parts = Object.entries(scope).map(([k, v]) =>
