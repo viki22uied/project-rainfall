@@ -15,3 +15,7 @@ Thumbs.db
 
 # Generated import CSVs
 data/import/
+
+# Catalyst import/export report artifacts
+Import_*.zip
+Export_*.zip
