@@ -1,0 +1,14 @@
+# Catalyst
+.build/
+catalyst-debug.log
+**/node_modules/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# OS/editor
+.DS_Store
+Thumbs.db

@@ -1,0 +1,68 @@
+person_id,canonical_id_GROUND_TRUTH,name_as_recorded,father_name,approx_age,district,role,source_record
+P-1001,CID-1000,PrakashKumar,Suresh Kumar,33,Ballari,accused,Charge sheet OCR scan
+P-1002,CID-1001,GirishShetty,Nagaraj Shetty,55,Tumakuru,victim,e-Prisons intake
+P-1003,CID-1001,Girish Shetty,Deepa Shetty,44,Tumakuru,witness,e-Prisons intake
+P-1004,CID-1002,V. Reddy,Shobha Reddy,53,Mangaluru City,witness,Station diary manual entry
+P-1005,CID-1002,VENKATESH REDDY,Kavya Reddy,33,Mysuru City,witness,CCTNS FIR entry
+P-1006,CID-1003,Prakash Murthy,Naveen Murthy,29,Ballari,witness,CCTNS FIR entry
+P-1007,CID-1004,Manjunath I.,Radha Iyer,35,Hubballi Dharwad,accused,CCTNS FIR entry
+P-1008,CID-1004,MANJUNATH IYER,Shobha Iyer,36,Ballari,victim,CCTNS FIR entry
+P-1009,CID-1005,Sunanda K.,Meena Kumar,19,Tumakuru,victim,e-Prisons intake
+P-1010,CID-1005,S. Kumar,Radha Kumar,25,Ballari,victim,e-Prisons intake
+P-1011,CID-1006,RameshGowda,Shivakumar Gowda,53,Ballari,accused,Charge sheet OCR scan
+P-1012,CID-1007,Nagaraj Shetty,Kavya Shetty,38,Mysuru City,accused,e-Prisons intake
+P-1013,CID-1007,NAGARAJ SHETTY,Manjunath Shetty,24,Tumakuru,witness,CCTNS FIR entry
+P-1014,CID-1008,R. Iyer,Deepa Iyer,54,Mysuru City,victim,Station diary manual entry
+P-1015,CID-1008,RADHA IYER,Nagaraj Iyer,53,Ballari,accused,Charge sheet OCR scan
+P-1016,CID-1008,RadhaIyer,Prema Iyer,42,Belagavi City,witness,CCTNS FIR entry
+P-1017,CID-1009,R. Murthy,Manjunath Murthy,40,Bengaluru City,accused,e-Prisons intake
+P-1018,CID-1010,Nagaraj Murthy,Suresh Murthy,33,Bengaluru City,accused,Charge sheet OCR scan
+P-1019,CID-1011,SUNANDA SHETTY,Venkatesh Shetty,36,Tumakuru,witness,e-Prisons intake
+P-1020,CID-1012,M. Iyer,Deepa Iyer,45,Mysuru City,accused,CCTNS FIR entry
+P-1021,CID-1012,Meena I.,Sunanda Iyer,41,Belagavi City,witness,Station diary manual entry
+P-1022,CID-1012,Meena Iyer,Suresh Iyer,25,Bengaluru City,witness,Charge sheet OCR scan
+P-1023,CID-1013,G. Kumar,Nagaraj Kumar,31,Hubballi Dharwad,witness,e-Prisons intake
+P-1024,CID-1014,S. Rao,Meena Rao,34,Ballari,accused,Station diary manual entry
+P-1025,CID-1014,ShivakumarRao,Shobha Rao,25,Bengaluru City,accused,CCTNS FIR entry
+P-1026,CID-1015,L. Naik,Sunanda Naik,50,Belagavi City,accused,Station diary manual entry
+P-1027,CID-1016,N. Shetty,Prema Shetty,19,Belagavi City,victim,Station diary manual entry
+P-1028,CID-1017,Lakshmi G.,Naveen Gowda,31,Mangaluru City,accused,CCTNS FIR entry
+P-1029,CID-1017,LAKSHMI GOWDA,Shobha Gowda,22,Tumakuru,victim,CCTNS FIR entry
+P-1030,CID-1018,MANJUNATH RAO,Deepa Rao,51,Ballari,accused,CCTNS FIR entry
+P-1031,CID-1019,Prakash Hegde,Manjunath Hegde,34,Belagavi City,accused,e-Prisons intake
+P-1032,CID-1019,P. Hegde,Suresh Hegde,24,Belagavi City,victim,Charge sheet OCR scan
+P-1033,CID-1019,PRAKASH HEGDE,Nagaraj Hegde,39,Mysuru City,victim,Station diary manual entry
+P-1034,CID-1020,KavyaIyer,Meena Iyer,39,Ballari,accused,CCTNS FIR entry
+P-1035,CID-1021,GIRISH KUMAR,Manjunath Kumar,53,Mysuru City,victim,e-Prisons intake
+P-1036,CID-1021,Girish Kumar,Kavya Kumar,23,Mysuru City,victim,Charge sheet OCR scan
+P-1037,CID-1022,Meena M.,Shobha Murthy,38,Hubballi Dharwad,accused,Charge sheet OCR scan
+P-1038,CID-1023,P. Rao,Girish Rao,26,Bengaluru City,accused,Charge sheet OCR scan
+P-1039,CID-1024,MANJUNATH MURTHY,Lakshmi Murthy,32,Tumakuru,victim,Station diary manual entry
+P-1040,CID-1024,M. Murthy,Girish Murthy,22,Bengaluru City,witness,Charge sheet OCR scan
+P-1041,CID-1025,Anand Iyer,Lakshmi Iyer,27,Tumakuru,victim,e-Prisons intake
+P-1042,CID-1026,KAVYA IYER,Shobha Iyer,19,Bengaluru City,accused,e-Prisons intake
+P-1043,CID-1026,Kavya I.,Shobha Iyer,21,Ballari,victim,e-Prisons intake
+P-1044,CID-1027,N. Gowda,Anand Gowda,42,Ballari,accused,Charge sheet OCR scan
+P-1045,CID-1027,Nagaraj Gowda,Nagaraj Gowda,34,Tumakuru,accused,Charge sheet OCR scan
+P-1046,CID-1028,Suresh S.,Shivakumar Shetty,30,Belagavi City,accused,e-Prisons intake
+P-1047,CID-1028,S. Shetty,Lakshmi Shetty,45,Ballari,accused,Charge sheet OCR scan
+P-1048,CID-1028,Suresh Shetty,Shivakumar Shetty,25,Belagavi City,accused,Station diary manual entry
+P-1049,CID-1029,A. Gowda,Meena Gowda,41,Mangaluru City,accused,e-Prisons intake
+P-1050,CID-1030,V. Gowda,Prema Gowda,40,Mangaluru City,accused,Charge sheet OCR scan
+P-1051,CID-1031,PREMA NAIK,Shobha Naik,40,Bengaluru City,accused,Charge sheet OCR scan
+P-1052,CID-1031,Prema N.,Shivakumar Naik,35,Bengaluru City,accused,Station diary manual entry
+P-1053,CID-1032,MeenaHegde,Radha Hegde,26,Belagavi City,accused,Charge sheet OCR scan
+P-1054,CID-1032,Meena H.,Suresh Hegde,46,Bengaluru City,accused,Charge sheet OCR scan
+P-1055,CID-1033,Shivakumar Hegde,Lakshmi Hegde,26,Tumakuru,victim,Charge sheet OCR scan
+P-1056,CID-1033,ShivakumarHegde,Sunanda Hegde,39,Belagavi City,victim,e-Prisons intake
+P-1057,CID-1034,Kavya S.,Prema Shetty,30,Hubballi Dharwad,victim,Station diary manual entry
+P-1058,CID-1035,Girish Gowda,Nagaraj Gowda,46,Ballari,victim,Station diary manual entry
+P-1059,CID-1035,GirishGowda,Meena Gowda,47,Tumakuru,accused,Station diary manual entry
+P-1060,CID-1035,G. Gowda,Shivakumar Gowda,24,Mangaluru City,victim,CCTNS FIR entry
+P-1061,CID-1036,ShivakumarMurthy,Venkatesh Murthy,31,Mysuru City,accused,CCTNS FIR entry
+P-1062,CID-1037,Venkatesh R.,Manjunath Reddy,48,Belagavi City,accused,Station diary manual entry
+P-1063,CID-1038,Meena R.,Naveen Rao,19,Ballari,accused,Station diary manual entry
+P-1064,CID-1038,M. Rao,Venkatesh Rao,30,Ballari,witness,CCTNS FIR entry
+P-1065,CID-1039,G. Murthy,Naveen Murthy,48,Tumakuru,victim,Station diary manual entry
+P-1066,CID-1039,Girish Murthy,Radha Murthy,46,Ballari,witness,e-Prisons intake
+P-1067,CID-1039,GIRISH MURTHY,Deepa Murthy,47,Mangaluru City,accused,Charge sheet OCR scan

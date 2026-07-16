@@ -1,0 +1,16 @@
+{
+  "functions": {
+    "targets": [
+      "rainfall-node-api",
+      "rainfall-py-ml"
+    ],
+    "ignore": [],
+    "source": "functions"
+  },
+  "client": {
+    "source": "client"
+  },
+  "apig": {
+    "enabled": true
+  }
+}
