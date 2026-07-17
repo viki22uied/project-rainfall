@@ -1,8 +1,7 @@
 """Pair similarity -> confidence 0..100. Name-only on purpose: father_name,
-approx_age and district are noisy for the same person in this data, so trusting
-them would hurt, not help."""
-import jellyfish
+approx_age and district are noisy for the same person in this data."""
 from .text import normalize, tokens
+from .jarowinkler import jaro_winkler
 
 
 def _tok_sim(s, l):
@@ -11,7 +10,7 @@ def _tok_sim(s, l):
         return 1.0 if l.startswith(s) else 0.0
     if len(l) == 1:
         return 1.0 if s.startswith(l) else 0.0
-    return jellyfish.jaro_winkler_similarity(s, l)
+    return jaro_winkler(s, l)
 
 
 def _token_align(a, b):
@@ -38,6 +37,6 @@ def _token_align(a, b):
 
 def score_pair(a, b):
     na, nb = normalize(a), normalize(b)
-    whole = jellyfish.jaro_winkler_similarity(na, nb) if na and nb else 0.0
+    whole = jaro_winkler(na, nb) if na and nb else 0.0
     align = _token_align(a, b)
     return round(max(whole, align) * 100)

@@ -1,38 +1,17 @@
-"""Candidate generation. Two block-key strategies, unioned, so we catch every
-variant type without an O(n^2) all-pairs comparison:
+"""Candidate generation. With ~10^2 persons, all-pairs is trivial and imposes no
+recall ceiling (phonetic blocking was dropping ~24% of true pairs before they
+could even be scored).
 
-  W: whole-name phonetic (space-stripped) -> catches spacing/concatenation/case
-     ('Girish Shetty' vs 'GirishShetty')
-  T: per-token phonetic                   -> catches initials/partial/reorder
-     ('V. Reddy' vs 'VENKATESH REDDY' share token 'reddy';
-      'Manjunath I.' vs 'MANJUNATH IYER' share token 'manjunath')
-"""
-from collections import defaultdict
-from .text import normalize, tokens, phonetic
-
-
-def block_keys(name):
-    keys = set()
-    whole = normalize(name)
-    if whole:
-        keys.add("W:" + phonetic(whole))
-    for t in tokens(name):
-        if len(t) > 1:  # skip single-letter initials — they'd over-block
-            keys.add("T:" + phonetic(t))
-    return keys
+ponytail: all-pairs O(n^2). Add phonetic/LSH blocking here if the person count
+grows past a few thousand — the rest of the pipeline is agnostic to how pairs
+are generated."""
 
 
 def candidate_pairs(persons):
-    """persons: list of (person_id, name). Returns a set of frozenset({idA, idB})
-    for every pair that shares at least one block key."""
-    buckets = defaultdict(list)
-    for pid, name in persons:
-        for k in block_keys(name):
-            buckets[k].append(pid)
+    """persons: list of (person_id, name). Returns every unordered id pair."""
     pairs = set()
-    for ids in buckets.values():
-        for i in range(len(ids)):
-            for j in range(i + 1, len(ids)):
-                if ids[i] != ids[j]:
-                    pairs.add(frozenset((ids[i], ids[j])))
+    ids = [pid for pid, _ in persons]
+    for i in range(len(ids)):
+        for j in range(i + 1, len(ids)):
+            pairs.add(frozenset((ids[i], ids[j])))
     return pairs

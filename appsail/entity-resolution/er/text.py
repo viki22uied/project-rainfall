@@ -1,7 +1,7 @@
-"""Text helpers for entity resolution. Works on name_as_recorded (raw), since the
-DB's name_normalized has spaces stripped and loses token boundaries we need."""
+"""Text helpers. Works on name_as_recorded (raw), since the DB's name_normalized
+has spaces stripped and loses the token boundaries we need. Pure-Python, no deps
+(a native phonetic lib crashed the AppSail container on import)."""
 import re
-import jellyfish
 
 
 def normalize(name):
@@ -12,7 +12,3 @@ def normalize(name):
 def tokens(name):
     """Word tokens, lowercased. 'V. Reddy' -> ['v', 'reddy']."""
     return [t for t in re.split(r"[^a-z]+", (name or "").lower()) if t]
-
-
-def phonetic(s):
-    return jellyfish.metaphone(s) if s else ""
