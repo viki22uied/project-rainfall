@@ -1,17 +1,145 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>rainfall-web</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" type="text/css" media="screen" href="main.css" />
-    <script src="main.js"></script>
+  <meta charset="utf-8" />
+  <title>Project-Rainfall — Crime Intelligence Console</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" type="text/css" media="screen" href="main.css" />
 </head>
 
 <body>
-    <h1>Hello World</h1>
+  <div class="app">
+    <div class="brand">
+      <div class="seal">R</div>
+      <div>
+        <b>Project-Rainfall</b>
+        <small data-i18n="brand_sub">KSP Crime Intelligence</small>
+      </div>
+    </div>
+
+    <header class="topbar">
+      <span class="classif" data-i18n="classif">Restricted · Official Use</span>
+      <span class="spacer"></span>
+
+      <label class="control" title="Role">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 12a4 4 0 100-8 4 4 0 000 8zM4 20a8 8 0 0116 0"/></svg>
+        <select id="role" class="control" style="border:0;background:none;padding:0">
+          <option value="investigator">Investigator</option>
+          <option value="analyst">Analyst</option>
+          <option value="supervisor">Supervisor</option>
+          <option value="policymaker">Policymaker</option>
+        </select>
+      </label>
+
+      <div class="seg" role="group" aria-label="Language">
+        <button data-lang="en" aria-pressed="true">EN</button>
+        <button data-lang="kn" aria-pressed="false" lang="kn">ಕನ್ನಡ</button>
+      </div>
+
+      <button class="control voice" id="voiceBtn" title="Voice query">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 15a3 3 0 003-3V6a3 3 0 00-6 0v6a3 3 0 003 3z"/><path d="M6 11a6 6 0 0012 0M12 18v3"/></svg>
+        <span data-i18n="voice">Speak</span>
+      </button>
+
+      <button class="control" id="themeBtn" title="Toggle theme" aria-label="Toggle theme">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 12.8A9 9 0 1111.2 3 7 7 0 0021 12.8z"/></svg>
+      </button>
+    </header>
+
+    <nav class="rail">
+      <div class="eyebrow" data-i18n="nav_head">Workspace</div>
+      <button class="nav" data-view="console" aria-current="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 5h16v12H4z"/><path d="M8 21h8M12 17v4"/></svg>
+        <span data-i18n="nav_console">Query Console</span>
+      </button>
+      <button class="nav" data-view="er">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="7" cy="8" r="3"/><circle cx="17" cy="8" r="3"/><path d="M7 21v-2a3 3 0 013-3M17 21v-2a3 3 0 00-3-3M10 16h4"/></svg>
+        <span data-i18n="nav_er">Entity Resolution</span>
+        <span class="chip amber badge" id="erBadge">4</span>
+      </button>
+      <button class="nav" data-view="mo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="7" r="2"/><circle cx="12" cy="17" r="2"/><path d="M7.5 7l3 8M16.5 8.5L13 16M8 6h8"/></svg>
+        <span data-i18n="nav_mo">Serial Patterns</span>
+        <span class="chip rust badge">3</span>
+      </button>
+      <button class="nav" data-view="evidence">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg>
+        <span data-i18n="nav_evidence">Evidence Chain</span>
+      </button>
+
+      <div class="who">
+        <div class="eyebrow" style="margin-bottom:5px" data-i18n="signed_in">Signed in</div>
+        <b id="whoName">I. Nayak</b>
+        <span class="scope" id="whoScope">Sub-Inspector · Gandhinagar PS</span>
+      </div>
+    </nav>
+
+    <main class="main">
+      <!-- CONSOLE -->
+      <section class="view active" id="view-console">
+        <div class="stats" id="stats"></div>
+        <div class="console panel" style="padding:16px">
+          <div class="transcript" id="transcript"></div>
+          <div>
+            <div class="suggest" id="suggest"></div>
+            <div class="composer">
+              <div class="field">
+                <textarea id="q" rows="1" data-i18n-ph="ask_ph" placeholder="Ask about a case, person, hotspot, or pattern…"></textarea>
+              </div>
+              <button class="btn primary" id="ask" data-i18n="send">Send</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ENTITY RESOLUTION -->
+      <section class="view" id="view-er">
+        <header>
+          <div class="eyebrow">Differentiator 01</div>
+          <h1 data-i18n="er_h">Entity Resolution</h1>
+          <p data-i18n="er_p">Candidate matches across inconsistent records — scored, never auto-merged. An analyst or supervisor confirms before two records become one identity.</p>
+        </header>
+        <div class="panel">
+          <div class="phead"><h3 data-i18n="er_pending">Candidate matches — pending review</h3><span class="eyebrow" id="erCount"></span></div>
+          <div id="matches"></div>
+        </div>
+      </section>
+
+      <!-- SERIAL PATTERNS -->
+      <section class="view" id="view-mo">
+        <header>
+          <div class="eyebrow">Differentiator 02</div>
+          <h1 data-i18n="mo_h">Serial-Pattern Analysis</h1>
+          <p data-i18n="mo_p">Unsolved cases linked by modus operandi — no named suspect required. Cross-jurisdiction spread is the signal, not a coincidence.</p>
+        </header>
+        <div class="patterns" id="patterns"></div>
+      </section>
+
+      <!-- EVIDENCE CHAIN -->
+      <section class="view" id="view-evidence">
+        <header>
+          <div class="eyebrow">Differentiator 03</div>
+          <h1 data-i18n="ev_h">Court-Admissible Evidence Chain</h1>
+          <p data-i18n="ev_p">Every AI finding is hash-stamped at the moment it is generated and issued as a Bharatiya Sakshya Adhiniyam 2023, Section 63 electronic-evidence certificate — the standard Indian courts now require.</p>
+        </header>
+        <div class="seal-stage">
+          <div class="stamp-well">
+            <div class="stamp" id="stamp">
+              <div class="flash"></div>
+              <div class="ring"><span class="txt" id="stampTxt">UNSEALED</span></div>
+            </div>
+            <button class="btn forest" id="sealBtn" data-i18n="seal_btn">Seal finding</button>
+            <span class="hint" id="sealHint" data-i18n="seal_hint">Press to hash-stamp the selected finding.</span>
+          </div>
+          <div class="cert locked" id="cert"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script src="main.js"></script>
 </body>
 
 </html>
