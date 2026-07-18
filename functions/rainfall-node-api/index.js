@@ -1,6 +1,7 @@
 const catalyst = require('zcatalyst-sdk-node');
 const { decideAccess, buildScopeFilter, maskPerson } = require('./lib/rbac');
 const { buildAuditRow } = require('./lib/audit');
+const { canRunPiiAction, withServerAttribution } = require('./lib/actions');
 
 // resource -> Data Store table, and which scope columns actually exist on it.
 const RESOURCE = {
@@ -23,15 +24,16 @@ const APPSAIL = {
 // pii:true actions expose individual identities → denied to policymaker (aggregates only).
 const ACTIONS = {
   er_candidates: { pii: true,  svc: 'ER',        path: '/candidates?threshold=90&limit=12', method: 'GET'  },
+  // bodyArg name avoids collisions with String.prototype methods (e.g. 'match', 'length',
+  // 'slice') — the local serve's arg lookup does `queryParamsAsString[key] || body[key]`,
+  // and a key that shadows a built-in string method resolves to that method, not the value.
+  confirm_match: { pii: true,  svc: 'ER',        path: '/confirm',                          method: 'POST', bodyArg: 'payload' },
   mo_clusters:   { pii: false, svc: 'MO',        path: '/cluster?threshold=1.0',            method: 'POST' },
   risk:          { pii: true,  svc: 'ANALYTICS', path: '/risk',                             method: 'GET'  },
   socio:         { pii: false, svc: 'ANALYTICS', path: '/sociodemographic',                 method: 'GET'  },
   forecast:      { pii: false, svc: 'ANALYTICS', path: '/forecast?key=crime_type',          method: 'GET'  },
   seal:          { pii: false, svc: 'LEGAL',     path: '/seal',                             method: 'POST', bodyArg: 'finding' },
 };
-
-// Roles allowed to run identity-level (pii) ML — cross-case tools per PRD §4.
-const PII_ML_ROLES = new Set(['analyst', 'supervisor']);
 
 async function callAppsail(def, body) {
   const res = await fetch(APPSAIL[def.svc] + def.path, {
@@ -98,13 +100,14 @@ module.exports = async (context, basicIO) => {
       // Identity-level ML (pii) runs over the WHOLE Data Store, so it exceeds the row scope of
       // investigator (own station) and policymaker (aggregates only). Restrict it to the
       // cross-case roles. Aggregate ML (mo_clusters, socio, forecast) stays open to all.
-      if (def.pii && !PII_ML_ROLES.has(user.role)) {
+      if (def.pii && !canRunPiiAction(user.role)) {
         const denied = { decision: 'denied', reason: `${user.role}: identity-level ML is restricted to analyst/supervisor`, maskPII: false, scope: null };
         const seq = await writeAudit(app, zcql, user, action, denied);
         return respond('failure', { error: 'access denied', reason: denied.reason, audit_seq: seq });
       }
       let body;
       if (def.bodyArg) { try { body = JSON.parse(basicIO.getArgument(def.bodyArg) || '{}'); } catch (_) { body = {}; } }
+      body = withServerAttribution(action, body, user);
       const data = await callAppsail(def, body);
       const seq = await writeAudit(app, zcql, user, action, { decision: 'allowed', reason: '', maskPII: false });
       return respond('success', { action, audit_seq: seq, data });

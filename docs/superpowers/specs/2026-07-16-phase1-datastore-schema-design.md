@@ -115,6 +115,19 @@ Legend: `→X` = foreign key to table X (by business key). `enc` = Encrypted tex
 | `match_ref` | →EntityMatches, null | set only when `link_source = er_inferred` |
 | `link_confidence` | int, null | set only when inferred |
 
+`link_source = er_inferred` rows cannot be produced at data-prep time — `EntityMatches`
+doesn't exist yet when `CasePersons` is first seeded (§4 below). They are created live by
+the ER AppSail's `POST /confirm` (`appsail/entity-resolution/catalyst_io.py:confirm_match`),
+called when an analyst/supervisor confirms a candidate match in the Entity Resolution panel
+(Node gateway action `confirm_match`, RBAC-restricted like the other identity-level ML).
+Confirming person A ↔ person B copies each identity's existing `CasePersons` rows onto the
+other (skipping cases where a link already exists), tagging the new rows `er_inferred` with
+`match_ref` = the deciding `EntityMatches` row and `link_confidence` = the match confidence
+— so every inferred link is citable back to the decision that justified it, and the merged
+identity's case history becomes visible from either original record (feeds the network graph,
+Requirement #6). Rejecting a match updates `EntityMatches.status` only; no `CasePersons` rows
+are added.
+
 **`AuditLog`** — append-only (Insert+Select perms only) + hash-chained
 | Column | Type | Notes |
 |---|---|---|

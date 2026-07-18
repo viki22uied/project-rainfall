@@ -165,7 +165,7 @@ async function loadLive() {
     const { data } = await api("er_candidates");
     if (data.candidates && data.candidates.length) {
       DATA.matches = data.candidates.map((m, i) => ({
-        id: `M${i + 1}`,
+        id: `M${i + 1}`, person_a: m.person_a, person_b: m.person_b, method: m.method,
         a: { name: m.name_a, sub: `${m.person_a}`, src: "Data Store · Persons" },
         b: { name: m.name_b, sub: `${m.person_b}`, src: "Data Store · Persons" },
         conf: m.confidence,
@@ -476,13 +476,30 @@ function renderMatches() {
       </div>
     </div>`).join("");
   $$("#matches .match").forEach((row) => {
-    row.querySelectorAll("[data-act]").forEach((btn) => btn.addEventListener("click", () => {
+    const m = DATA.matches.find((x) => x.id === row.dataset.id);
+    row.querySelectorAll("[data-act]").forEach((btn) => btn.addEventListener("click", async () => {
       const confirmed = btn.dataset.act === "confirm";
+      row.querySelectorAll("[data-act]").forEach((b) => (b.disabled = true));
+
+      let linksCreated = null;
+      if (state.live && m && m.person_a && m.person_b) {
+        try {
+          const { data } = await api("confirm_match", { payload: JSON.stringify({
+            person_a: m.person_a, person_b: m.person_b, decision: confirmed ? "confirmed" : "rejected",
+            confidence: m.conf, method: m.method || "composite" }) });
+          linksCreated = data.links_created;
+        } catch (e) {
+          row.querySelectorAll("[data-act]").forEach((b) => (b.disabled = false));
+          toast(e.denied ? `Denied — ${e.message}` : "Could not reach the backend — try again.");
+          return;
+        }
+      }
+
       row.classList.add("resolved");
       const badge = document.createElement("div");
       badge.className = "chip " + (confirmed ? "forest" : "");
       badge.innerHTML = confirmed
-        ? '<span class="dot"></span>confirmed & sealed for §63'
+        ? `<span class="dot"></span>confirmed & sealed for §63${linksCreated != null ? ` · ${linksCreated} case link${linksCreated === 1 ? "" : "s"} added` : ""}`
         : "rejected — kept separate";
       row.querySelector(".conf").appendChild(badge);
       const n = DATA.matches.length - $$("#matches .resolved").length;

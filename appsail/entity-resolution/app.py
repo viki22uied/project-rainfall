@@ -47,6 +47,23 @@ def do_candidates():
     return jsonify(threshold=threshold, count=len(matches), candidates=matches)
 
 
+@app.route("/confirm", methods=["POST"])
+def do_confirm():
+    """Human confirms or rejects a candidate match (no silent auto-merge — PRD).
+    Confirming links each identity's known cases to the other, tagged link_source
+    'er_inferred' with match_ref citing the deciding EntityMatches row."""
+    b = request.get_json(force=True, silent=True) or {}
+    for f in ("person_a", "person_b", "decision"):
+        if not b.get(f):
+            return jsonify(error=f"missing {f}"), 400
+    if b["decision"] not in ("confirmed", "rejected"):
+        return jsonify(error="decision must be confirmed or rejected"), 400
+    result = catalyst_io.confirm_match(
+        b["person_a"], b["person_b"], b["decision"],
+        b.get("decided_by", ""), b.get("confidence", 0), b.get("method", "composite"))
+    return jsonify(result)
+
+
 @app.route("/evaluate")
 def do_evaluate():
     threshold = int(request.args.get("threshold", DEFAULT_THRESHOLD))
