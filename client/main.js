@@ -545,33 +545,48 @@ function renderNetwork() {
 }
 
 /* ============================ PDF export (Req 4) ============================ */
+const PDF_CSS = `body{font:13px/1.5 Georgia,serif;color:#1c1e1b;max-width:720px;margin:32px auto;padding:0 20px}
+.hd{border-bottom:2px solid #1c1e1b;padding-bottom:8px;margin-bottom:16px}
+.hd b{font-size:17px} .meta{color:#6b6e5e;font-size:11px;margin-top:4px}
+.t{margin:12px 0;padding:10px 12px;border:1px solid #c9c2ac;border-radius:3px}
+.w{font-weight:bold;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#a5432c;margin-bottom:4px}
+table{border-collapse:collapse;width:100%;font-size:12px} td,th{border:1px solid #c9c2ac;padding:3px 6px;text-align:left}
+.mono{font-family:Consolas,monospace;font-size:11px} .hint{color:#6b6e5e;font-size:11px}
+.ft{margin-top:20px;border-top:1px solid #c9c2ac;padding-top:8px;color:#6b6e5e;font-size:11px}`;
+
+// Build the export via DOM APIs and importNode — we copy the already-rendered (esc'd) nodes
+// rather than re-serialising to an HTML string, so no untrusted value is ever re-parsed.
 function exportPDF() {
   const turns = $$("#transcript .turn");
   if (!turns.length) { toast(L("Nothing to export yet — ask a question first.", "ರಫ್ತು ಮಾಡಲು ಏನೂ ಇಲ್ಲ — ಮೊದಲು ಪ್ರಶ್ನೆ ಕೇಳಿ.")); return; }
   const R = ROLES[state.role];
   const now = new Date().toISOString().replace("T", " ").slice(0, 19) + " UTC";
-  const body = turns.map((tn) => {
-    const who = tn.classList.contains("user") ? R.name : "Project-Rainfall";
-    return `<div class="t"><div class="w">${esc(who)}</div><div class="b">${tn.querySelector(".body .bubble, .bubble") ? tn.querySelector(".body").innerHTML : tn.innerHTML}</div></div>`;
-  }).join("");
-  const doc = `<!doctype html><html><head><meta charset="utf-8"><title>Rainfall conversation record</title>
-    <style>body{font:13px/1.5 Georgia,serif;color:#1c1e1b;max-width:720px;margin:32px auto;padding:0 20px}
-    .hd{border-bottom:2px solid #1c1e1b;padding-bottom:8px;margin-bottom:16px}
-    .hd b{font-size:17px} .meta{color:#6b6e5e;font-size:11px;margin-top:4px}
-    .t{margin:12px 0;padding:10px 12px;border:1px solid #c9c2ac;border-radius:3px}
-    .w{font-weight:bold;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#a5432c;margin-bottom:4px}
-    table{border-collapse:collapse;width:100%;font-size:12px} td,th{border:1px solid #c9c2ac;padding:3px 6px;text-align:left}
-    .mono{font-family:Consolas,monospace;font-size:11px} .hint{color:#6b6e5e;font-size:11px}
-    .ft{margin-top:20px;border-top:1px solid #c9c2ac;padding-top:8px;color:#6b6e5e;font-size:11px}</style></head>
-    <body><div class="hd"><b>Project-Rainfall — Conversation Record</b>
-      <div class="meta">Role: ${esc(R.name)} · ${esc(R.scope)} &nbsp;|&nbsp; Exported: ${esc(now)} &nbsp;|&nbsp; Restricted · Official Use</div></div>
-      ${body}
-      <div class="ft">Every answer above was role-filtered before retrieval and hash-stamped for BSA 2023 §63.
-      For a court-admissible copy, use the backend encrypted-export service (AES-GCM) — this local PDF is a working record.</div>
-      <script>onload=function(){print()}<\/script></body></html>`;
   const w = window.open("", "_blank");
   if (!w) { toast(L("Allow pop-ups to export the PDF.", "ಪಿಡಿಎಫ್ ರಫ್ತಿಗೆ ಪಾಪ್-ಅಪ್ ಅನುಮತಿಸಿ.")); return; }
-  w.document.write(doc); w.document.close();
+  const d = w.document;
+  const el = (tag, cls, text) => { const n = d.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+
+  d.title = "Rainfall conversation record";
+  d.head.appendChild(el("style")).textContent = PDF_CSS;
+
+  const hd = el("div", "hd");
+  hd.appendChild(el("b", null, "Project-Rainfall — Conversation Record"));
+  hd.appendChild(el("div", "meta", `Role: ${R.name} · ${R.scope}  |  Exported: ${now}  |  Restricted · Official Use`));
+  d.body.appendChild(hd);
+
+  turns.forEach((tn) => {
+    const wrap = el("div", "t");
+    wrap.appendChild(el("div", "w", tn.classList.contains("user") ? R.name : "Project-Rainfall"));
+    const src = tn.querySelector(".body") || tn;      // already-safe, esc'd DOM
+    wrap.appendChild(d.importNode(src, true));
+    d.body.appendChild(wrap);
+  });
+
+  d.body.appendChild(el("div", "ft",
+    "Every answer above was role-filtered before retrieval and hash-stamped for BSA 2023 §63. " +
+    "For a court-admissible copy, use the backend encrypted-export service (AES-GCM) — this local PDF is a working record."));
+
+  setTimeout(() => w.print(), 300);
   toast(L("Conversation record opened — save as PDF from the print dialog.", "ಸಂಭಾಷಣೆ ದಾಖಲೆ ತೆರೆಯಲಾಗಿದೆ — ಮುದ್ರಣ ಸಂವಾದದಿಂದ ಪಿಡಿಎಫ್ ಆಗಿ ಉಳಿಸಿ."));
 }
 

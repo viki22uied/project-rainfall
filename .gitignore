@@ -2,6 +2,8 @@
 .build/
 catalyst-debug.log
 **/node_modules/
+# local-only serve override (see serve-local.sh) — must never be committed
+functions/rainfall-node-api/catalyst-config.json.bak
 
 # Python
 __pycache__/

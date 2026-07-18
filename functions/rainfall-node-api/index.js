@@ -30,6 +30,9 @@ const ACTIONS = {
   seal:          { pii: false, svc: 'LEGAL',     path: '/seal',                             method: 'POST', bodyArg: 'finding' },
 };
 
+// Roles allowed to run identity-level (pii) ML — cross-case tools per PRD §4.
+const PII_ML_ROLES = new Set(['analyst', 'supervisor']);
+
 async function callAppsail(def, body) {
   const res = await fetch(APPSAIL[def.svc] + def.path, {
     method: def.method,
@@ -64,15 +67,13 @@ module.exports = async (context, basicIO) => {
   const elevated = String(basicIO.getArgument('elevated')) === 'true';
 
   try {
-    // 1. Identify the actor. NEVER trust a client-supplied identity in production:
-    //    only the authenticated Catalyst user counts. The actor_email override exists
-    //    solely for local/demo runs and is gated behind a server-side flag that is
-    //    unset in production (without it, a caller could impersonate any role).
+    // 1. Identify the actor. The authenticated Catalyst user ALWAYS wins — a client-supplied
+    //    actor_email is only honoured when there is no real session AND a server-side flag is
+    //    set. That flag is absent from the deployed config (see catalyst-config.json) and is
+    //    injected for local serve only (serve-local.sh); in production it can never impersonate.
     let email;
-    if (process.env.ALLOW_ACTOR_EMAIL_OVERRIDE === 'true') email = basicIO.getArgument('actor_email');
-    if (!email) {
-      try { email = (await app.userManagement().getCurrentUser()).email_id; } catch (_) { /* no auth context */ }
-    }
+    try { email = (await app.userManagement().getCurrentUser()).email_id; } catch (_) { /* no auth context */ }
+    if (!email && process.env.ALLOW_ACTOR_EMAIL_OVERRIDE === 'true') email = basicIO.getArgument('actor_email');
     // Strict validation doubles as injection defense: a valid email contains no quotes,
     // so the interpolation below cannot be broken out of.
     if (!email || !/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(email)) {
@@ -94,8 +95,11 @@ module.exports = async (context, basicIO) => {
     }
     if (action && ACTIONS[action]) {
       const def = ACTIONS[action];
-      if (def.pii && user.role === 'policymaker') {
-        const denied = { decision: 'denied', reason: 'policymaker: aggregates only, no individual identities', maskPII: false, scope: null };
+      // Identity-level ML (pii) runs over the WHOLE Data Store, so it exceeds the row scope of
+      // investigator (own station) and policymaker (aggregates only). Restrict it to the
+      // cross-case roles. Aggregate ML (mo_clusters, socio, forecast) stays open to all.
+      if (def.pii && !PII_ML_ROLES.has(user.role)) {
+        const denied = { decision: 'denied', reason: `${user.role}: identity-level ML is restricted to analyst/supervisor`, maskPII: false, scope: null };
         const seq = await writeAudit(app, zcql, user, action, denied);
         return respond('failure', { error: 'access denied', reason: denied.reason, audit_seq: seq });
       }
