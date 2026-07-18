@@ -86,10 +86,10 @@ const I18N = {
 
 /* ============================ roles ============================ */
 const ROLES = {
-  investigator: { name: "I. Nayak", scope: "Sub-Inspector · Gandhinagar PS", station: "Gandhinagar PS", mask: false, aggregatesOnly: false },
-  analyst:      { name: "A. Kulkarni", scope: "Crime Analyst · State", mask: true, aggregatesOnly: false },
-  supervisor:   { name: "S. Gowda", scope: "Deputy SP · Ballari District", district: "Ballari", mask: false, aggregatesOnly: false },
-  policymaker:  { name: "P. Rao", scope: "Secretariat · State aggregates", mask: true, aggregatesOnly: true },
+  investigator: { name: "I. Nayak", scope: "Sub-Inspector · Gandhinagar PS", scopeKn: "ಉಪ-ನಿರೀಕ್ಷಕ · ಗಾಂಧಿನಗರ ಠಾಣೆ", station: "Gandhinagar PS", mask: false, aggregatesOnly: false },
+  analyst:      { name: "A. Kulkarni", scope: "Crime Analyst · State", scopeKn: "ಅಪರಾಧ ವಿಶ್ಲೇಷಕ · ರಾಜ್ಯ", mask: true, aggregatesOnly: false },
+  supervisor:   { name: "S. Gowda", scope: "Deputy SP · Ballari District", scopeKn: "ಉಪ ಪೊಲೀಸ್ ವರಿಷ್ಠಾಧಿಕಾರಿ · ಬಳ್ಳಾರಿ ಜಿಲ್ಲೆ", district: "Ballari", mask: false, aggregatesOnly: false },
+  policymaker:  { name: "P. Rao", scope: "Secretariat · State aggregates", scopeKn: "ಸಚಿವಾಲಯ · ರಾಜ್ಯ ಒಟ್ಟುಗಳು", mask: true, aggregatesOnly: true },
 };
 
 /* ============================ state + helpers ============================ */
@@ -97,6 +97,7 @@ const state = { lang: "en", role: "investigator", lastEntity: null };
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const t = (k) => (I18N[state.lang][k] || I18N.en[k] || k);
+const L = (en, kn) => (state.lang === "kn" ? kn : en); // inline bilingual string
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
 function toast(msg) {
@@ -152,9 +153,9 @@ function addTurn(who, html) {
 function maskName(name) { return ROLES[state.role].mask ? '<span class="masked">[PII masked — request elevation]</span>' : esc(name); }
 
 function trail(items, hash) {
-  return `<div class="trail"><div class="eyebrow">Evidence trail</div><ul>${items.map((i) => `<li>${esc(i)}</li>`).join("")}</ul>
+  return `<div class="trail"><div class="eyebrow">${L("Evidence trail", "ಸಾಕ್ಷ್ಯ ಜಾಡು")}</div><ul>${items.map((i) => `<li>${esc(i)}</li>`).join("")}</ul>
     <div class="hash"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6z"/></svg>
-    <span class="mono">${esc(hash)}</span> · sealed for §63</div></div>`;
+    <span class="mono">${esc(hash)}</span> · ${L("sealed for §63", "§63 ಗಾಗಿ ಮುದ್ರಿತ")}</div></div>`;
 }
 
 // intent router → returns {text, html?, speak}
@@ -163,78 +164,93 @@ function route(qRaw) {
   const R = ROLES[state.role];
 
   // policymaker: individual-record queries are denied
-  const wantsIndividual = /accused|victim|person|c-\d|risk|profile|witness/.test(q);
+  const wantsIndividual = /accused|victim|person|c-\d|risk|profile|witness|ಆರೋಪಿ|ವ್ಯಕ್ತಿ|ಅಪಾಯ|ಪ್ರೊಫೈಲ್/.test(q);
   if (R.aggregatesOnly && wantsIndividual) {
-    return { html: `<div class="bubble"><div class="denied">Access denied — the Policymaker role sees state-wide aggregates only. No individual PII, ever. This query was logged (decision: <b>denied</b>, seq #4127).</div></div>`,
-      speak: "Access denied. The policymaker role sees state aggregates only." };
+    return { html: `<div class="bubble"><div class="denied">${L(
+        "Access denied — the Policymaker role sees state-wide aggregates only. No individual PII, ever. This query was logged (decision: <b>denied</b>, seq #4127).",
+        "ಪ್ರವೇಶ ನಿರಾಕರಿಸಲಾಗಿದೆ — ನೀತಿನಿರೂಪಕ ಪಾತ್ರವು ರಾಜ್ಯ ಮಟ್ಟದ ಒಟ್ಟುಗಳನ್ನಷ್ಟೇ ನೋಡುತ್ತದೆ. ವೈಯಕ್ತಿಕ ಮಾಹಿತಿ ಎಂದಿಗೂ ಇಲ್ಲ. ಈ ಪ್ರಶ್ನೆಯನ್ನು ದಾಖಲಿಸಲಾಗಿದೆ (ನಿರ್ಧಾರ: <b>ನಿರಾಕರಿಸಲಾಗಿದೆ</b>, ಕ್ರಮ #4127).")}</div></div>`,
+      speak: L("Access denied. The policymaker role sees state aggregates only.", "ಪ್ರವೇಶ ನಿರಾಕರಿಸಲಾಗಿದೆ. ನೀತಿನಿರೂಪಕ ಪಾತ್ರವು ರಾಜ್ಯ ಒಟ್ಟುಗಳನ್ನಷ್ಟೇ ನೋಡುತ್ತದೆ.") };
   }
 
   // accused in a case
-  if (/accused|c-5001|who .*case/.test(q)) {
+  if (/accused|c-5001|who .*case|ಆರೋಪಿ|ಪ್ರಕರಣ/.test(q)) {
     state.lastEntity = "C-5001";
     const c = DATA.cases["C-5001"];
-    const rows = c.people.map((p) => `<tr><td>${esc(p.role)}</td><td>${p.role === "accused" ? maskName(p.name) : maskName(p.name)}</td><td class="mono">${esc(p.pid)}</td></tr>`).join("");
+    const roleLbl = { accused: L("accused", "ಆರೋಪಿ"), victim: L("victim", "ಸಂತ್ರಸ್ತ"), witness: L("witness", "ಸಾಕ್ಷಿ") };
+    const rows = c.people.map((p) => `<tr><td>${esc(roleLbl[p.role] || p.role)}</td><td>${maskName(p.name)}</td><td class="mono">${esc(p.pid)}</td></tr>`).join("");
     const hash = "e3b0c442…"; // placeholder short hash for the answer
     return {
       html: `<div class="bubble">
-        <p><b>${esc(c.fir)}</b> — ${esc(c.crime)} at ${esc(c.station)}, ${esc(c.district)} (${esc(c.date)}). Status: <span class="chip rust"><span class="dot"></span>${esc(c.status)}</span></p>
-        <div class="record"><div class="rhead"><b>Parties to the case</b><span class="chip amber">role-filtered · ${esc(state.role)}</span></div>
-          <table><thead><tr><th>Role</th><th>Name</th><th>Person ID</th></tr></thead><tbody>${rows}</tbody></table></div>
-        ${R.mask ? '<p class="hint" style="margin-top:8px">Names withheld under analyst PII policy — a supervisor can grant elevation.</p>' : ""}
-        <p class="hint" style="margin-top:8px">Linked to <b>SERIAL-1</b> — see Serial Patterns.</p>
-        ${trail(["Query gated by role BEFORE retrieval (" + state.role + ")", "Source: CCTNS FIR entry + charge sheet", "Row-level access checked against station scope"], hash)}
+        <p><b>${esc(c.fir)}</b> — ${esc(c.crime)} ${L("at", "—")} ${esc(c.station)}, ${esc(c.district)} (${esc(c.date)}). ${L("Status", "ಸ್ಥಿತಿ")}: <span class="chip rust"><span class="dot"></span>${esc(c.status)}</span></p>
+        <div class="record"><div class="rhead"><b>${L("Parties to the case", "ಪ್ರಕರಣದ ಪಕ್ಷಗಳು")}</b><span class="chip amber">${L("role-filtered", "ಪಾತ್ರ-ಶೋಧಿತ")} · ${esc(state.role)}</span></div>
+          <table><thead><tr><th>${L("Role", "ಪಾತ್ರ")}</th><th>${L("Name", "ಹೆಸರು")}</th><th>${L("Person ID", "ವ್ಯಕ್ತಿ ID")}</th></tr></thead><tbody>${rows}</tbody></table></div>
+        ${R.mask ? `<p class="hint" style="margin-top:8px">${L("Names withheld under analyst PII policy — a supervisor can grant elevation.", "ವಿಶ್ಲೇಷಕ ಮಾಹಿತಿ ನೀತಿಯಡಿ ಹೆಸರುಗಳನ್ನು ತಡೆಹಿಡಿಯಲಾಗಿದೆ — ಮೇಲ್ವಿಚಾರಕ ಅನುಮತಿ ನೀಡಬಹುದು.")}</p>` : ""}
+        <p class="hint" style="margin-top:8px">${L("Linked to", "ಸಂಪರ್ಕಿತ")} <b>SERIAL-1</b> — ${L("see Serial Patterns.", "ಸರಣಿ ಮಾದರಿಗಳನ್ನು ನೋಡಿ.")}</p>
+        ${trail([
+          L("Query gated by role BEFORE retrieval (" + state.role + ")", "ಪಡೆಯುವ ಮೊದಲೇ ಪಾತ್ರದಿಂದ ಶೋಧಿಸಲಾಗಿದೆ (" + state.role + ")"),
+          L("Source: CCTNS FIR entry + charge sheet", "ಮೂಲ: CCTNS ಎಫ್‌ಐಆರ್ ನಮೂದು + ದೋಷಾರೋಪ ಪಟ್ಟಿ"),
+          L("Row-level access checked against station scope", "ಠಾಣೆ ವ್ಯಾಪ್ತಿಗೆ ವಿರುದ್ಧ ಸಾಲು-ಮಟ್ಟದ ಪ್ರವೇಶ ಪರಿಶೀಲಿಸಲಾಗಿದೆ")], hash)}
       </div>`,
-      speak: `${c.fir}. ${c.crime} at ${c.station}. Status ${c.status}.`,
+      speak: `${c.fir}. ${c.crime} ${L("at", "—")} ${c.station}. ${L("Status", "ಸ್ಥಿತಿ")} ${c.status}.`,
     };
   }
 
   // hotspots / trend
-  if (/hotspot|snatch|trend|where/.test(q)) {
+  if (/hotspot|snatch|trend|where|ಹಾಟ್|ಸ್ನ್ಯಾಚ|ಎಲ್ಲಿ/.test(q)) {
     const rows = DATA.districtsTop.map((d) => `<tr><td>${esc(d.d)}</td><td class="num">${d.ipc.toLocaleString()}</td><td class="num">${d.sll.toLocaleString()}</td><td class="num">${d.total.toLocaleString()}</td></tr>`).join("");
     return {
-      html: `<div class="bubble"><p>Chain-snatching is concentrated in urban corridors; district IPC/SLL intensity (2022 snapshot):</p>
-        <div class="record"><div class="rhead"><b>District crime intensity</b><span class="chip">source-year 2022 · snapshot</span></div>
-          <table><thead><tr><th>District</th><th>IPC</th><th>SLL</th><th>Total</th></tr></thead><tbody>${rows}</tbody></table></div>
-        <p class="hint" style="margin-top:8px">Forecast: Burglary rising fastest (slope +0.35/mo) — early warning flagged.</p>
-        ${trail(["Aggregate query — no individual PII touched", "Real KSP 2022 IPC/SLL totals", "Trend = least-squares slope over monthly counts"], "9f2 a1c…")}</div>`,
-      speak: "Chain snatching is concentrated in urban corridors. Bengaluru City has the highest crime intensity.",
+      html: `<div class="bubble"><p>${L("Chain-snatching is concentrated in urban corridors; district IPC/SLL intensity (2022 snapshot):", "ಚೈನ್ ಸ್ನ್ಯಾಚಿಂಗ್ ನಗರ ಕಾರಿಡಾರ್‌ಗಳಲ್ಲಿ ಕೇಂದ್ರೀಕೃತವಾಗಿದೆ; ಜಿಲ್ಲಾ IPC/SLL ತೀವ್ರತೆ (2022 ಸ್ನ್ಯಾಪ್‌ಶಾಟ್):")}</p>
+        <div class="record"><div class="rhead"><b>${L("District crime intensity", "ಜಿಲ್ಲಾ ಅಪರಾಧ ತೀವ್ರತೆ")}</b><span class="chip">${L("source-year 2022 · snapshot", "ಮೂಲ-ವರ್ಷ 2022 · ಸ್ನ್ಯಾಪ್‌ಶಾಟ್")}</span></div>
+          <table><thead><tr><th>${L("District", "ಜಿಲ್ಲೆ")}</th><th>IPC</th><th>SLL</th><th>${L("Total", "ಒಟ್ಟು")}</th></tr></thead><tbody>${rows}</tbody></table></div>
+        <p class="hint" style="margin-top:8px">${L("Forecast: Burglary rising fastest (slope +0.35/mo) — early warning flagged.", "ಮುನ್ಸೂಚನೆ: ಕಳ್ಳತನ ಅತಿ ವೇಗವಾಗಿ ಏರುತ್ತಿದೆ (ಇಳಿಜಾರು +0.35/ತಿಂಗಳು) — ಮುನ್ನೆಚ್ಚರಿಕೆ ಗುರುತಿಸಲಾಗಿದೆ.")}</p>
+        ${trail([
+          L("Aggregate query — no individual PII touched", "ಒಟ್ಟು ಪ್ರಶ್ನೆ — ಯಾವುದೇ ವೈಯಕ್ತಿಕ ಮಾಹಿತಿ ಸ್ಪರ್ಶಿಸಿಲ್ಲ"),
+          L("Real KSP 2022 IPC/SLL totals", "ನೈಜ KSP 2022 IPC/SLL ಒಟ್ಟುಗಳು"),
+          L("Trend = least-squares slope over monthly counts", "ಪ್ರವೃತ್ತಿ = ಮಾಸಿಕ ಎಣಿಕೆಗಳ ಮೇಲೆ ಕನಿಷ್ಠ-ವರ್ಗ ಇಳಿಜಾರು")], "9f2 a1c…")}</div>`,
+      speak: L("Chain snatching is concentrated in urban corridors. Bengaluru City has the highest crime intensity.", "ಚೈನ್ ಸ್ನ್ಯಾಚಿಂಗ್ ನಗರ ಕಾರಿಡಾರ್‌ಗಳಲ್ಲಿ ಕೇಂದ್ರೀಕೃತವಾಗಿದೆ. ಬೆಂಗಳೂರು ನಗರದಲ್ಲಿ ಅತಿ ಹೆಚ್ಚು ಅಪರಾಧ ತೀವ್ರತೆ ಇದೆ."),
     };
   }
 
   // serial pattern
-  if (/serial|pattern|linked|repeat/.test(q)) {
+  if (/serial|pattern|linked|repeat|ಸರಣಿ|ಮಾದರಿ/.test(q)) {
     const c = DATA.clusters[0];
     return {
-      html: `<div class="bubble"><p>Yes — <b>${esc(c.id)}</b>: ${c.cases.length} unsolved ${esc(c.crime)} cases share one behavioral signature across ${c.districts.length} districts.</p>
-        <div class="record"><div class="rhead"><b>${esc(c.id)} signature</b><span class="chip rust"><span class="dot"></span>cross-jurisdiction</span></div>
+      html: `<div class="bubble"><p>${L("Yes —", "ಹೌದು —")} <b>${esc(c.id)}</b>: ${c.cases.length} ${L("unsolved " + c.crime + " cases share one behavioral signature across " + c.districts.length + " districts.", "ಬಗೆಹರಿಯದ " + c.crime + " ಪ್ರಕರಣಗಳು " + c.districts.length + " ಜಿಲ್ಲೆಗಳಾದ್ಯಂತ ಒಂದೇ ವರ್ತನಾ ಸಹಿ ಹಂಚಿಕೊಳ್ಳುತ್ತವೆ.")}</p>
+        <div class="record"><div class="rhead"><b>${esc(c.id)} ${L("signature", "ಸಹಿ")}</b><span class="chip rust"><span class="dot"></span>${L("cross-jurisdiction", "ಗಡಿ-ದಾಟುವ")}</span></div>
           <table><tbody>${Object.entries(c.sig).map(([k, v]) => `<tr><th style="width:120px">${esc(k)}</th><td>${esc(v)}</td></tr>`).join("")}</tbody></table></div>
-        <p class="hint" style="margin-top:8px">Cases: ${c.cases.map(esc).join(", ")}. Cluster cohesion ${c.score}%.</p>
-        ${trail(["Linked by MO signature — no named suspect used", "Union-find over cases with ≥ threshold MO match", "Geographic spread across " + c.districts.length + " districts"], "7ac 44b…")}</div>`,
-      speak: `Yes. ${c.id}. ${c.cases.length} chain snatching cases across ${c.districts.length} districts share one signature.`,
+        <p class="hint" style="margin-top:8px">${L("Cases", "ಪ್ರಕರಣಗಳು")}: ${c.cases.map(esc).join(", ")}. ${L("Cluster cohesion", "ಕ್ಲಸ್ಟರ್ ಒಗ್ಗಟ್ಟು")} ${c.score}%.</p>
+        ${trail([
+          L("Linked by MO signature — no named suspect used", "MO ಸಹಿಯಿಂದ ಸಂಪರ್ಕಿತ — ಹೆಸರಿಸಿದ ಶಂಕಿತ ಬಳಸಿಲ್ಲ"),
+          L("Union-find over cases with ≥ threshold MO match", "ಮಿತಿ ≥ MO ಹೊಂದಾಣಿಕೆ ಇರುವ ಪ್ರಕರಣಗಳ ಮೇಲೆ ಯೂನಿಯನ್-ಫೈಂಡ್"),
+          L("Geographic spread across " + c.districts.length + " districts", c.districts.length + " ಜಿಲ್ಲೆಗಳಾದ್ಯಂತ ಭೌಗೋಳಿಕ ಹರಡುವಿಕೆ")], "7ac 44b…")}</div>`,
+      speak: L("Yes. " + c.id + ". " + c.cases.length + " chain snatching cases across " + c.districts.length + " districts share one signature.", "ಹೌದು. " + c.id + ". " + c.cases.length + " ಚೈನ್ ಸ್ನ್ಯಾಚಿಂಗ್ ಪ್ರಕರಣಗಳು " + c.districts.length + " ಜಿಲ್ಲೆಗಳಾದ್ಯಂತ ಒಂದೇ ಸಹಿ ಹಂಚಿಕೊಳ್ಳುತ್ತವೆ."),
     };
   }
 
   // risk
-  if (/risk|profile|dangerous/.test(q)) {
-    const name = R.mask ? "[PII masked]" : "PrakashKumar";
+  if (/risk|profile|dangerous|ಅಪಾಯ|ಪ್ರೊಫೈಲ್/.test(q)) {
+    const name = R.mask ? L("[PII masked]", "[ಮಾಹಿತಿ ಮರೆಮಾಡಲಾಗಿದೆ]") : "PrakashKumar";
     return {
-      html: `<div class="bubble"><p>Risk profile — ${maskName("PrakashKumar")} (P-1001):</p>
+      html: `<div class="bubble"><p>${L("Risk profile", "ಅಪಾಯ ಪ್ರೊಫೈಲ್")} — ${maskName("PrakashKumar")} (P-1001):</p>
         <div class="record"><table><tbody>
-          <tr><th style="width:180px">Overall risk</th><td><span class="chip rust"><span class="dot"></span>89 / 100</span></td></tr>
-          <tr><th>Repeat offending</th><td>32 — 4 linked cases</td></tr>
-          <tr><th>Crime severity</th><td>32 — max Robbery (9/10)</td></tr>
-          <tr><th>Geographic spread</th><td>25 — operating across 4 districts</td></tr>
+          <tr><th style="width:180px">${L("Overall risk", "ಒಟ್ಟಾರೆ ಅಪಾಯ")}</th><td><span class="chip rust"><span class="dot"></span>89 / 100</span></td></tr>
+          <tr><th>${L("Repeat offending", "ಪುನರಾವರ್ತಿತ ಅಪರಾಧ")}</th><td>32 — ${L("4 linked cases", "4 ಸಂಪರ್ಕಿತ ಪ್ರಕರಣಗಳು")}</td></tr>
+          <tr><th>${L("Crime severity", "ಅಪರಾಧ ತೀವ್ರತೆ")}</th><td>32 — ${L("max Robbery (9/10)", "ಗರಿಷ್ಠ ದರೋಡೆ (9/10)")}</td></tr>
+          <tr><th>${L("Geographic spread", "ಭೌಗೋಳಿಕ ಹರಡುವಿಕೆ")}</th><td>25 — ${L("operating across 4 districts", "4 ಜಿಲ್ಲೆಗಳಾದ್ಯಂತ ಕಾರ್ಯನಿರ್ವಹಣೆ")}</td></tr>
         </tbody></table></div>
-        ${trail(["Every factor is transparent and contributes a shown weight", "Score = weighted behavioral factors, no opaque model", "Cited cases available on request"], "1d0 e7f…")}</div>`,
-      speak: `Risk profile. ${name}. Overall risk 89 out of 100. High.`,
+        ${trail([
+          L("Every factor is transparent and contributes a shown weight", "ಪ್ರತಿ ಅಂಶವೂ ಪಾರದರ್ಶಕ ಮತ್ತು ತೋರಿಸಿದ ತೂಕ ನೀಡುತ್ತದೆ"),
+          L("Score = weighted behavioral factors, no opaque model", "ಅಂಕ = ತೂಕದ ವರ್ತನಾ ಅಂಶಗಳು, ಯಾವುದೇ ಅಪಾರದರ್ಶಕ ಮಾದರಿ ಇಲ್ಲ"),
+          L("Cited cases available on request", "ಉಲ್ಲೇಖಿತ ಪ್ರಕರಣಗಳು ವಿನಂತಿಯ ಮೇರೆಗೆ ಲಭ್ಯ")], "1d0 e7f…")}</div>`,
+      speak: L("Risk profile. " + name + ". Overall risk 89 out of 100. High.", "ಅಪಾಯ ಪ್ರೊಫೈಲ್. " + name + ". ಒಟ್ಟಾರೆ ಅಪಾಯ 100 ರಲ್ಲಿ 89. ಹೆಚ್ಚು."),
     };
   }
 
   // fallback
   return {
-    html: `<div class="bubble"><p>I can retrieve FIR/case details, resolve identities across records, surface serial patterns, map hotspots, and score offender risk — every answer role-filtered and hash-stamped for evidence.</p>
-      <p class="hint">Try one of the suggested queries above.</p></div>`,
-    speak: "I can retrieve case details, resolve identities, surface serial patterns, and score risk.",
+    html: `<div class="bubble"><p>${L("I can retrieve FIR/case details, resolve identities across records, surface serial patterns, map hotspots, and score offender risk — every answer role-filtered and hash-stamped for evidence.", "ನಾನು ಎಫ್‌ಐಆರ್/ಪ್ರಕರಣ ವಿವರ ಪಡೆಯಬಲ್ಲೆ, ದಾಖಲೆಗಳಾದ್ಯಂತ ಗುರುತು ಗುರುತಿಸಬಲ್ಲೆ, ಸರಣಿ ಮಾದರಿ ತೋರಿಸಬಲ್ಲೆ, ಹಾಟ್‌ಸ್ಪಾಟ್ ನಕ್ಷೆ ಮಾಡಬಲ್ಲೆ, ಅಪರಾಧಿ ಅಪಾಯ ಅಂಕ ನೀಡಬಲ್ಲೆ — ಪ್ರತಿ ಉತ್ತರವೂ ಪಾತ್ರ-ಶೋಧಿತ ಮತ್ತು ಸಾಕ್ಷ್ಯಕ್ಕಾಗಿ ಹ್ಯಾಶ್-ಮುದ್ರಿತ.")}</p>
+      <p class="hint">${L("Try one of the suggested queries above.", "ಮೇಲಿನ ಸೂಚಿತ ಪ್ರಶ್ನೆಗಳಲ್ಲಿ ಒಂದನ್ನು ಪ್ರಯತ್ನಿಸಿ.")}</p></div>`,
+    speak: L("I can retrieve case details, resolve identities, surface serial patterns, and score risk.", "ನಾನು ಪ್ರಕರಣ ವಿವರ ಪಡೆಯಬಲ್ಲೆ, ಗುರುತು ಗುರುತಿಸಬಲ್ಲೆ, ಸರಣಿ ಮಾದರಿ ತೋರಿಸಬಲ್ಲೆ, ಅಪಾಯ ಅಂಕ ನೀಡಬಲ್ಲೆ."),
   };
 }
 
@@ -368,33 +384,58 @@ function speak(text) {
   u.lang = state.lang === "kn" ? "kn-IN" : "en-IN";
   speechSynthesis.cancel(); speechSynthesis.speak(u);
 }
+const VOICE_ERR = {
+  "not-allowed": L => L("Microphone blocked — allow mic access for this site, then click Speak again.", "ಮೈಕ್ ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ — ಈ ಸೈಟ್‌ಗೆ ಮೈಕ್ ಅನುಮತಿಸಿ, ನಂತರ ಮತ್ತೆ ಮಾತನಾಡಿ ಒತ್ತಿ."),
+  "service-not-allowed": L => L("Speech service unavailable — open the page over http://localhost, not a file:// path.", "ಭಾಷಣ ಸೇವೆ ಲಭ್ಯವಿಲ್ಲ — ಪುಟವನ್ನು file:// ಬದಲು http://localhost ಮೂಲಕ ತೆರೆಯಿರಿ."),
+  "network": L => L("Speech recognition needs an internet connection.", "ಭಾಷಣ ಗುರುತಿಸುವಿಕೆಗೆ ಇಂಟರ್ನೆಟ್ ಸಂಪರ್ಕ ಬೇಕು."),
+  "no-speech": L => L("Didn't catch that — try speaking again.", "ಕೇಳಿಸಲಿಲ್ಲ — ಮತ್ತೆ ಮಾತನಾಡಲು ಪ್ರಯತ್ನಿಸಿ."),
+};
 function toggleVoice() {
   state._speak = true;
-  if (!SR) { toast("Voice input isn't supported in this browser — output still works"); return; }
+  if (!SR) { toast(L("Voice input needs Chrome or Edge — output still works.", "ಧ್ವನಿ ಇನ್‌ಪುಟ್‌ಗೆ Chrome ಅಥವಾ Edge ಬೇಕು — ಔಟ್‌ಪುಟ್ ಇನ್ನೂ ಕೆಲಸ ಮಾಡುತ್ತದೆ.")); return; }
   if (recog && recog._on) { recog.stop(); return; }
   recog = new SR();
   recog.lang = state.lang === "kn" ? "kn-IN" : "en-IN";
-  recog.interimResults = false;
+  recog.interimResults = true;
   recog._on = true;
   $("#voiceBtn").classList.add("live");
-  recog.onresult = (e) => { $("#q").value = e.results[0][0].transcript; };
-  recog.onend = () => { recog._on = false; $("#voiceBtn").classList.remove("live"); if ($("#q").value.trim()) ask(); };
-  recog.onerror = () => { recog._on = false; $("#voiceBtn").classList.remove("live"); };
-  recog.start();
+  recog._got = false;
+  recog.onstart = () => toast(L("Listening…", "ಆಲಿಸುತ್ತಿದೆ…"));
+  recog.onresult = (e) => {
+    const text = [...e.results].map((r) => r[0].transcript).join("");
+    $("#q").value = text;
+    if (text.trim()) recog._got = true;
+    // submit as soon as we have a final result, don't wait for the mic to time out
+    if ([...e.results].some((r) => r.isFinal) && text.trim()) { recog._done = true; recog.stop(); }
+  };
+  recog.onend = () => {
+    recog._on = false; $("#voiceBtn").classList.remove("live");
+    if ($("#q").value.trim()) ask();
+    else if (!recog._got) toast(L("Didn't catch anything — speak clearly and try again.", "ಏನೂ ಕೇಳಿಸಲಿಲ್ಲ — ಸ್ಪಷ್ಟವಾಗಿ ಮಾತನಾಡಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ."));
+  };
+  recog.onerror = (e) => {
+    recog._on = false; $("#voiceBtn").classList.remove("live");
+    const m = VOICE_ERR[e.error]; if (m) toast(m(L)); else toast(L("Voice error: ", "ಧ್ವನಿ ದೋಷ: ") + e.error);
+  };
+  try { recog.start(); }
+  catch (err) { recog._on = false; $("#voiceBtn").classList.remove("live"); toast(L("Couldn't start the mic — click Speak again.", "ಮೈಕ್ ಪ್ರಾರಂಭಿಸಲಾಗಲಿಲ್ಲ — ಮತ್ತೆ ಮಾತನಾಡಿ ಒತ್ತಿ.")); }
 }
 
 /* ============================ role + nav + theme ============================ */
 function applyRole() {
   const R = ROLES[state.role];
   $("#whoName").textContent = R.name;
-  $("#whoScope").textContent = R.scope;
+  $("#whoScope").textContent = state.lang === "kn" ? R.scopeKn : R.scope;
   // reset console with a role-appropriate greeting
   $("#transcript").innerHTML = "";
   const greet = R.aggregatesOnly
-    ? "You are viewing state-wide aggregates only. Individual records and PII are never shown to this role."
+    ? L("You are viewing state-wide aggregates only. Individual records and PII are never shown to this role.",
+        "ನೀವು ರಾಜ್ಯ ಮಟ್ಟದ ಒಟ್ಟುಗಳನ್ನಷ್ಟೇ ನೋಡುತ್ತಿದ್ದೀರಿ. ವೈಯಕ್ತಿಕ ದಾಖಲೆ ಮತ್ತು ಮಾಹಿತಿಯನ್ನು ಈ ಪಾತ್ರಕ್ಕೆ ಎಂದಿಗೂ ತೋರಿಸಲಾಗುವುದಿಲ್ಲ.")
     : R.mask
-      ? "Cross-case access enabled. Personal identifiers are masked until a supervisor grants elevation."
-      : `Full detail for your scope: ${R.scope.split("· ")[1] || "assigned cases"}. Every query is role-filtered before retrieval and logged.`;
+      ? L("Cross-case access enabled. Personal identifiers are masked until a supervisor grants elevation.",
+          "ಅಡ್ಡ-ಪ್ರಕರಣ ಪ್ರವೇಶ ಸಕ್ರಿಯಗೊಂಡಿದೆ. ಮೇಲ್ವಿಚಾರಕ ಅನುಮತಿ ನೀಡುವವರೆಗೆ ವೈಯಕ್ತಿಕ ಗುರುತುಗಳನ್ನು ಮರೆಮಾಡಲಾಗಿದೆ.")
+      : L(`Full detail for your scope: ${R.scope.split("· ")[1] || "assigned cases"}. Every query is role-filtered before retrieval and logged.`,
+          `ನಿಮ್ಮ ವ್ಯಾಪ್ತಿಗೆ ಪೂರ್ಣ ವಿವರ: ${R.scopeKn.split("· ")[1] || "ನಿಯೋಜಿತ ಪ್ರಕರಣಗಳು"}. ಪ್ರತಿ ಪ್ರಶ್ನೆಯೂ ಪಡೆಯುವ ಮೊದಲು ಪಾತ್ರ-ಶೋಧಿತ ಮತ್ತು ದಾಖಲಿತ.`);
   addTurn("system", `<div class="bubble"><p>${esc(greet)}</p></div>`);
 }
 
@@ -422,7 +463,7 @@ function boot() {
   $$(".seg [data-lang]").forEach((b) => b.addEventListener("click", () => {
     state.lang = b.dataset.lang;
     $$(".seg [data-lang]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
-    applyLang();
+    applyLang(); applyRole(); // reset greeting/transcript into the new language
   }));
   $("#ask").addEventListener("click", ask);
   $("#q").addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); ask(); } });
