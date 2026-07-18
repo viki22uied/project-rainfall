@@ -3,7 +3,12 @@
 		"name": "rainfall-node-api",
 		"stack": "node20",
 		"type": "basicio",
-		"env_variables": {}
+		"env_variables": {
+			"APPSAIL_ER": "https://entityresolution-50044055970.development.catalystappsail.in",
+			"APPSAIL_MO": "https://moclustering-50044055970.development.catalystappsail.in",
+			"APPSAIL_ANALYTICS": "https://analytics-50044055970.development.catalystappsail.in",
+			"APPSAIL_LEGAL": "https://legal-50044055970.development.catalystappsail.in"
+		}
 	},
 	"execution": {
 		"main": "index.js"

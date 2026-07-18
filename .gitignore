@@ -11,6 +11,28 @@ __pycache__/
 .venv/
 venv/
 
+# AppSail: deps vendored by each service's predeploy script (see appsail/*/app-config.json).
+# AppSail's cloud build does NOT run pip install — deps must be vendored into the build dir
+# before `catalyst deploy` uploads it. Regenerated fresh on every deploy; never commit them.
+appsail/*/bin/
+appsail/*/*.dist-info/
+appsail/*/*.so
+appsail/*/blinker/
+appsail/*/certifi/
+appsail/*/charset_normalizer/
+appsail/*/click/
+appsail/*/colorama/
+appsail/*/flask/
+appsail/*/idna/
+appsail/*/itsdangerous/
+appsail/*/jinja2/
+appsail/*/markupsafe/
+appsail/*/requests/
+appsail/*/typing_extensions.py
+appsail/*/urllib3/
+appsail/*/werkzeug/
+appsail/*/zcatalyst_sdk/
+
 # OS/editor
 .DS_Store
 Thumbs.db

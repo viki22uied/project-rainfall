@@ -1,15 +1,14 @@
 [
   {
-    "name": "Login Redirect",
-    "source_endpoint": "/app/index.html",
-    "target_endpoint": "/app/index.html",
+    "name": "Client JS",
+    "source_endpoint": "/app/main.js",
+    "target_endpoint": "/app/main.js",
     "target": "client",
     "method": "GET",
     "throttling": {
       "overall": {},
       "ip": {}
-    },
-    "system": true
+    }
   },
   {
     "name": "Client CSS",
@@ -23,24 +22,27 @@
     }
   },
   {
-    "name": "Client JS",
-    "source_endpoint": "/app/main.js",
-    "target_endpoint": "/app/main.js",
+    "name": "Rainfall API",
+    "source_endpoint": "/server/rainfall-node-api/execute",
+    "target_endpoint": "/server/rainfall-node-api/execute",
+    "target": "basicio",
+    "method": "POST",
+    "throttling": {
+      "overall": {},
+      "ip": {}
+    },
+    "target_id": "rainfall-node-api"
+  },
+  {
+    "name": "Login Redirect",
+    "source_endpoint": "/app/index.html",
+    "target_endpoint": "/app/index.html",
     "target": "client",
     "method": "GET",
     "throttling": {
       "overall": {},
       "ip": {}
-    }
-  },
-  {
-    "name": "Rainfall API",
-    "source_endpoint": "/server/rainfall-node-api/execute",
-    "target_endpoint": "/server/rainfall-node-api/execute",
-    "method": "POST",
-    "throttling": {
-      "overall": {},
-      "ip": {}
-    }
+    },
+    "system": true
   }
 ]

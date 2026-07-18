@@ -4,5 +4,7 @@
 	"stack": "python_3_10",
 	"env_variables": {},
 	"memory": 256,
-	"scripts": {}
+	"scripts": {
+		"predeploy": "python3 -m pip install flask zcatalyst-sdk -t . --platform manylinux2014_x86_64 --implementation cp --python-version 3.10 --abi cp310 --only-binary=:all: --upgrade"
+	}
 }
