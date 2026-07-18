@@ -329,3 +329,31 @@ select.control { padding-right: 8px; }
   .seal-stage { grid-template-columns: 1fr; }
   .topbar { overflow-x: auto; }
 }
+
+/* ============================ criminal network graph ============================ */
+.netlegend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; font-size: 12px; color: var(--text-2); }
+.netlegend .lk { display: inline-flex; align-items: center; gap: 6px; }
+.netlegend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.netgraph { width: 100%; height: 460px; display: block; background:
+  radial-gradient(circle at 1px 1px, var(--line) 1px, transparent 0) 0 0 / 14px 14px; border: 1px solid var(--line); border-radius: var(--r); }
+.netedge { stroke: var(--olive); stroke-width: .5; opacity: .55; }
+.netedge.weak { stroke-dasharray: 1.4 1.4; opacity: .8; stroke: var(--rust); }
+.netnode { animation: netsettle .5s cubic-bezier(.2,.7,.3,1) both; }
+.netnode text { font: 2.6px var(--sans); fill: var(--text-2); paint-order: stroke; stroke: var(--panel); stroke-width: .7px; }
+.netnode circle { stroke: var(--panel); stroke-width: .6; cursor: default; }
+.n-accused i, .n-accused circle { background: var(--rust); fill: var(--rust); }
+.n-victim i,  .n-victim circle  { background: var(--amber); fill: var(--amber); }
+.n-case i,    .n-case circle    { background: var(--olive); fill: var(--olive); }
+.n-cluster i, .n-cluster circle { background: var(--forest); fill: var(--forest); }
+@keyframes netsettle { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: scale(1); } }
+
+/* ============================ socio-demographic bars ============================ */
+.socio { display: grid; gap: 7px; padding: 4px 2px; }
+.sbar { display: grid; grid-template-columns: 92px 1fr 42px; align-items: center; gap: 8px; font-size: 12px; }
+.sbar .lab { color: var(--text-2); }
+.sbar i { height: 12px; background: var(--accent); border-radius: 2px; display: block; min-width: 2px; }
+.sbar .num { text-align: right; color: var(--text-2); font-variant-numeric: tabular-nums; }
+
+/* ============================ FIU request object ============================ */
+pre.req { background: var(--paper-3); border: 1px solid var(--line); border-left: 3px solid var(--accent);
+  border-radius: var(--r); padding: 12px 14px; margin: 10px 0 0; font-size: 12px; overflow-x: auto; white-space: pre; }

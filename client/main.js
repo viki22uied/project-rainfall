@@ -56,6 +56,34 @@ const DATA = {
     { d: "Tumakuru", ipc: 3894, sll: 1102, total: 4996 },
     { d: "Bagalkot", ipc: 2199, sll: 735, total: 2934 },
   ],
+  // criminal network — nodes (persons/cases) + relationships. PII masked at render for masked roles.
+  network: {
+    nodes: [
+      { id: "P-1001", label: "PrakashKumar", kind: "accused", x: 50, y: 30 },
+      { id: "P-1041", label: "Manjunath I.", kind: "accused", x: 78, y: 22 },
+      { id: "P-1002", label: "GirishShetty", kind: "victim", x: 22, y: 20 },
+      { id: "C-5001", label: "C-5001", kind: "case", x: 34, y: 52 },
+      { id: "C-5002", label: "C-5002", kind: "case", x: 60, y: 55 },
+      { id: "C-5004", label: "C-5004", kind: "case", x: 82, y: 50 },
+      { id: "SERIAL-1", label: "SERIAL-1", kind: "cluster", x: 58, y: 82 },
+    ],
+    edges: [
+      { a: "P-1001", b: "C-5001", rel: "accused in" },
+      { a: "P-1002", b: "C-5001", rel: "victim in" },
+      { a: "P-1001", b: "C-5002", rel: "accused in" },
+      { a: "P-1041", b: "C-5004", rel: "accused in" },
+      { a: "P-1001", b: "P-1041", rel: "co-offender", weak: true },
+      { a: "C-5001", b: "SERIAL-1", rel: "member" },
+      { a: "C-5002", b: "SERIAL-1", rel: "member" },
+      { a: "C-5004", b: "SERIAL-1", rel: "member" },
+    ],
+  },
+  // socio-demographic correlation (accused profile vs urbanization) — aggregate, no PII
+  demographics: {
+    age: [ { b: "18–25", v: 34 }, { b: "26–35", v: 41 }, { b: "36–45", v: 17 }, { b: "46+", v: 8 } ],
+    gender: [ { b: "Male", v: 88 }, { b: "Female", v: 11 }, { b: "Other", v: 1 } ],
+    urban: [ { b: "Urban", v: 63 }, { b: "Semi-urban", v: 24 }, { b: "Rural", v: 13 } ],
+  },
 };
 
 /* ============================ i18n ============================ */
@@ -63,8 +91,9 @@ const I18N = {
   en: {
     brand_sub: "KSP Crime Intelligence", classif: "Restricted · Official Use", voice: "Speak",
     nav_head: "Workspace", nav_console: "Query Console", nav_er: "Entity Resolution",
-    nav_mo: "Serial Patterns", nav_evidence: "Evidence Chain", signed_in: "Signed in", send: "Send",
-    ask_ph: "Ask about a case, person, hotspot, or pattern…",
+    nav_mo: "Serial Patterns", nav_network: "Network", nav_evidence: "Evidence Chain", signed_in: "Signed in", send: "Send",
+    export_btn: "Export PDF", ask_ph: "Ask about a case, person, hotspot, or pattern…",
+    net_h: "Criminal Network", net_p: "Persons, cases and clusters as one relationship graph. Confirmed identities collapse into a single node; cross-jurisdiction co-offending links surface here.",
     er_h: "Entity Resolution", er_p: "Candidate matches across inconsistent records — scored, never auto-merged. An analyst or supervisor confirms before two records become one identity.",
     er_pending: "Candidate matches — pending review",
     mo_h: "Serial-Pattern Analysis", mo_p: "Unsolved cases linked by modus operandi — no named suspect required. Cross-jurisdiction spread is the signal, not a coincidence.",
@@ -74,8 +103,9 @@ const I18N = {
   kn: {
     brand_sub: "ಕೆಎಸ್‌ಪಿ ಅಪರಾಧ ಗುಪ್ತಚರ", classif: "ನಿರ್ಬಂಧಿತ · ಅಧಿಕೃತ ಬಳಕೆ", voice: "ಮಾತನಾಡಿ",
     nav_head: "ಕಾರ್ಯಕ್ಷೇತ್ರ", nav_console: "ಪ್ರಶ್ನೆ ಫಲಕ", nav_er: "ವ್ಯಕ್ತಿ ಗುರುತಿಸುವಿಕೆ",
-    nav_mo: "ಸರಣಿ ಮಾದರಿಗಳು", nav_evidence: "ಸಾಕ್ಷ್ಯ ಸರಪಳಿ", signed_in: "ಪ್ರವೇಶಿಸಿದವರು", send: "ಕಳುಹಿಸಿ",
-    ask_ph: "ಪ್ರಕರಣ, ವ್ಯಕ್ತಿ, ಹಾಟ್‌ಸ್ಪಾಟ್ ಅಥವಾ ಮಾದರಿ ಬಗ್ಗೆ ಕೇಳಿ…",
+    nav_mo: "ಸರಣಿ ಮಾದರಿಗಳು", nav_network: "ಜಾಲ", nav_evidence: "ಸಾಕ್ಷ್ಯ ಸರಪಳಿ", signed_in: "ಪ್ರವೇಶಿಸಿದವರು", send: "ಕಳುಹಿಸಿ",
+    export_btn: "ಪಿಡಿಎಫ್ ರಫ್ತು", ask_ph: "ಪ್ರಕರಣ, ವ್ಯಕ್ತಿ, ಹಾಟ್‌ಸ್ಪಾಟ್ ಅಥವಾ ಮಾದರಿ ಬಗ್ಗೆ ಕೇಳಿ…",
+    net_h: "ಅಪರಾಧ ಜಾಲ", net_p: "ವ್ಯಕ್ತಿಗಳು, ಪ್ರಕರಣಗಳು ಮತ್ತು ಕ್ಲಸ್ಟರ್‌ಗಳು ಒಂದೇ ಸಂಬಂಧ ಗ್ರಾಫ್ ಆಗಿ. ದೃಢೀಕೃತ ಗುರುತುಗಳು ಒಂದೇ ನೋಡ್ ಆಗಿ ಸೇರುತ್ತವೆ; ಗಡಿ-ದಾಟುವ ಸಹ-ಅಪರಾಧ ಕೊಂಡಿಗಳು ಇಲ್ಲಿ ಕಾಣಿಸುತ್ತವೆ.",
     er_h: "ವ್ಯಕ್ತಿ ಗುರುತಿಸುವಿಕೆ", er_p: "ಅಸಮಂಜಸ ದಾಖಲೆಗಳಾದ್ಯಂತ ಸಂಭಾವ್ಯ ಹೊಂದಾಣಿಕೆಗಳು — ಅಂಕ ನೀಡಲಾಗಿದೆ, ಸ್ವಯಂ-ವಿಲೀನಗೊಳಿಸಿಲ್ಲ. ವಿಶ್ಲೇಷಕ ಅಥವಾ ಮೇಲ್ವಿಚಾರಕ ದೃಢೀಕರಿಸುತ್ತಾರೆ.",
     er_pending: "ಸಂಭಾವ್ಯ ಹೊಂದಾಣಿಕೆಗಳು — ಪರಿಶೀಲನೆ ಬಾಕಿ",
     mo_h: "ಸರಣಿ ಮಾದರಿ ವಿಶ್ಲೇಷಣೆ", mo_p: "ಕಾರ್ಯವಿಧಾನದಿಂದ ಸಂಪರ್ಕಿಸಲಾದ ಬಗೆಹರಿಯದ ಪ್ರಕರಣಗಳು — ಶಂಕಿತನ ಹೆಸರು ಅಗತ್ಯವಿಲ್ಲ. ಗಡಿ-ದಾಟುವ ಹರಡುವಿಕೆಯೇ ಸೂಚನೆ.",
@@ -86,14 +116,80 @@ const I18N = {
 
 /* ============================ roles ============================ */
 const ROLES = {
-  investigator: { name: "I. Nayak", scope: "Sub-Inspector · Gandhinagar PS", scopeKn: "ಉಪ-ನಿರೀಕ್ಷಕ · ಗಾಂಧಿನಗರ ಠಾಣೆ", station: "Gandhinagar PS", mask: false, aggregatesOnly: false },
-  analyst:      { name: "A. Kulkarni", scope: "Crime Analyst · State", scopeKn: "ಅಪರಾಧ ವಿಶ್ಲೇಷಕ · ರಾಜ್ಯ", mask: true, aggregatesOnly: false },
-  supervisor:   { name: "S. Gowda", scope: "Deputy SP · Ballari District", scopeKn: "ಉಪ ಪೊಲೀಸ್ ವರಿಷ್ಠಾಧಿಕಾರಿ · ಬಳ್ಳಾರಿ ಜಿಲ್ಲೆ", district: "Ballari", mask: false, aggregatesOnly: false },
-  policymaker:  { name: "P. Rao", scope: "Secretariat · State aggregates", scopeKn: "ಸಚಿವಾಲಯ · ರಾಜ್ಯ ಒಟ್ಟುಗಳು", mask: true, aggregatesOnly: true },
+  investigator: { name: "I. Nayak", email: "investigator@rainfall.demo", scope: "Sub-Inspector · Gandhinagar PS", scopeKn: "ಉಪ-ನಿರೀಕ್ಷಕ · ಗಾಂಧಿನಗರ ಠಾಣೆ", station: "Gandhinagar PS", mask: false, aggregatesOnly: false },
+  analyst:      { name: "A. Kulkarni", email: "analyst@rainfall.demo", scope: "Crime Analyst · State", scopeKn: "ಅಪರಾಧ ವಿಶ್ಲೇಷಕ · ರಾಜ್ಯ", mask: true, aggregatesOnly: false },
+  supervisor:   { name: "S. Gowda", email: "supervisor@rainfall.demo", scope: "Deputy SP · Ballari District", scopeKn: "ಉಪ ಪೊಲೀಸ್ ವರಿಷ್ಠಾಧಿಕಾರಿ · ಬಳ್ಳಾರಿ ಜಿಲ್ಲೆ", district: "Ballari", mask: false, aggregatesOnly: false },
+  policymaker:  { name: "P. Rao", email: "policymaker@rainfall.demo", scope: "Secretariat · State aggregates", scopeKn: "ಸಚಿವಾಲಯ · ರಾಜ್ಯ ಒಟ್ಟುಗಳು", mask: true, aggregatesOnly: true },
 };
 
+/* ============================ live backend (Node gateway → AppSail ML) ============================ */
+/* The gateway role-filters BEFORE any ML call (PRD §4) and hash-chains an audit row per request.
+   If the backend is unreachable (e.g. the static Slate build with no server), we keep the curated
+   sample so the console never dies — state.live reflects which is in use. */
+const API_URL = "/server/rainfall-node-api/execute";
+async function api(action, extra = {}) {
+  const res = await fetch(API_URL, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action, actor_email: ROLES[state.role].email, ...extra }),
+  });
+  // Basic I/O wraps the function's string output as { output: "<json>" }; unwrap when present.
+  let j = await res.json();
+  if (j && typeof j.output === "string") j = JSON.parse(j.output);
+  if (!j || j.status !== "success") { const e = new Error((j && (j.reason || j.error)) || "api error"); e.denied = true; throw e; }
+  return j;
+}
+
+async function loadLive() {
+  try {
+    const s = await api("stats");
+    DATA.stats[0].v = s.stats.cases; DATA.stats[0].d = `${s.stats.persons} persons on file`;
+    DATA.stats[1].v = s.stats.unsolved;
+    DATA.stats[1].d = `${Math.round(100 * s.stats.unsolved / s.stats.cases)}% open`;
+    state.live = true;
+  } catch (_) { state.live = false; }
+
+  try {
+    const { data } = await api("mo_clusters");
+    if (data.patterns && data.patterns.length) {
+      DATA.clusters = data.patterns.map((p, i) => ({
+        id: `SERIAL-${i + 1}`, crime: p.crime_type || "Serial pattern",
+        cases: p.case_ids, districts: p.districts,
+        sig: Object.fromEntries(Object.entries(p.signature || {}).filter(([, v]) => v)),
+        score: p.score,
+      }));
+      DATA.stats[2].v = data.patterns.length;
+    }
+  } catch (_) { /* keep sample clusters */ }
+
+  try {
+    const { data } = await api("er_candidates");
+    if (data.candidates && data.candidates.length) {
+      DATA.matches = data.candidates.map((m, i) => ({
+        id: `M${i + 1}`,
+        a: { name: m.name_a, sub: `${m.person_a}`, src: "Data Store · Persons" },
+        b: { name: m.name_b, sub: `${m.person_b}`, src: "Data Store · Persons" },
+        conf: m.confidence,
+        why: [`Composite match (${m.method})`, `Confidence score ${m.confidence}/100`,
+              m.confidence >= 90 ? "Above review threshold" : "Below auto-confirm — needs review"],
+      }));
+    }
+  } catch (e) { if (e.denied) DATA.matches = []; /* role denied → show none; offline → keep sample */ }
+
+  renderStats(); renderMatches(); renderPatterns(); renderNetwork();
+  $("#erBadge").textContent = DATA.matches.length;
+  renderLiveBadge();
+}
+
+function renderLiveBadge() {
+  let el = $("#liveBadge");
+  if (!el) { el = document.createElement("span"); el.id = "liveBadge"; el.className = "classif"; $(".topbar").insertBefore(el, $(".topbar .spacer")); }
+  el.style.marginLeft = "8px";
+  el.textContent = state.live ? L("● Live · AppSail ML", "● ನೇರ · AppSail ML") : L("○ Sample data", "○ ಮಾದರಿ ಡೇಟಾ");
+  el.style.color = state.live ? "var(--ok)" : "var(--text-3)";
+}
+
 /* ============================ state + helpers ============================ */
-const state = { lang: "en", role: "investigator", lastEntity: null };
+const state = { lang: "en", role: "investigator", lastEntity: null, live: false };
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const t = (k) => (I18N[state.lang][k] || I18N.en[k] || k);
@@ -172,6 +268,14 @@ function route(qRaw) {
       speak: L("Access denied. The policymaker role sees state aggregates only.", "ಪ್ರವೇಶ ನಿರಾಕರಿಸಲಾಗಿದೆ. ನೀತಿನಿರೂಪಕ ಪಾತ್ರವು ರಾಜ್ಯ ಒಟ್ಟುಗಳನ್ನಷ್ಟೇ ನೋಡುತ್ತದೆ.") };
   }
 
+  // context-aware follow-up: a pronoun/short query with no named entity reuses the last one.
+  const namesEntity = /accused|victim|hotspot|snatch|serial|pattern|risk|profile|demograph|socio|financ|transaction|c-\d/.test(q);
+  const isFollowup = /\b(his|her|its|that|this|the case|same|status|there|it)\b|ಅವನ|ಅವಳ|ಅದರ|ಆ |ಸ್ಥಿತಿ/.test(q);
+  if (!namesEntity && isFollowup && state.lastEntity === "C-5001") {
+    qRaw = "accused in " + state.lastEntity; // resolve pronoun → last case, fall through to the case branch
+    return route(qRaw);
+  }
+
   // accused in a case
   if (/accused|c-5001|who .*case|ಆರೋಪಿ|ಪ್ರಕರಣ/.test(q)) {
     state.lastEntity = "C-5001";
@@ -246,6 +350,41 @@ function route(qRaw) {
     };
   }
 
+  // socio-demographic correlation (aggregate — allowed for every role incl. policymaker)
+  if (/demograph|socio|age|gender|urban|correlat|ವಯಸ್ಸು|ಲಿಂಗ|ನಗರ|ಸಾಮಾಜಿಕ/.test(q)) {
+    const bars = (title, rows) => `<div class="record"><div class="rhead"><b>${esc(title)}</b></div>
+      <div class="socio">${rows.map((r) => `<div class="sbar"><span class="lab">${esc(r.b)}</span><i style="width:${r.v}%"></i><span class="num">${r.v}%</span></div>`).join("")}</div></div>`;
+    const D = DATA.demographics;
+    return {
+      html: `<div class="bubble"><p>${L("Socio-demographic correlation of accused profiles (state aggregate, no PII):", "ಆರೋಪಿ ಪ್ರೊಫೈಲ್‌ಗಳ ಸಾಮಾಜಿಕ-ಜನಸಂಖ್ಯಾ ಸಂಬಂಧ (ರಾಜ್ಯ ಒಟ್ಟು, ಮಾಹಿತಿ ಇಲ್ಲ):")}</p>
+        ${bars(L("Age band", "ವಯೋಮಾನ"), D.age)}${bars(L("Gender", "ಲಿಂಗ"), D.gender)}${bars(L("Urbanization", "ನಗರೀಕರಣ"), D.urban)}
+        <p class="hint" style="margin-top:8px">${L("Correlation: 26–35 urban males dominate property crime — consistent with the SERIAL-1 offender profile.", "ಸಂಬಂಧ: 26–35 ನಗರ ಪುರುಷರು ಆಸ್ತಿ ಅಪರಾಧದಲ್ಲಿ ಪ್ರಬಲರು — SERIAL-1 ಅಪರಾಧಿ ಪ್ರೊಫೈಲ್‌ಗೆ ಹೊಂದುತ್ತದೆ.")}</p>
+        ${trail([
+          L("Aggregate correlation — no individual record touched", "ಒಟ್ಟು ಸಂಬಂಧ — ಯಾವುದೇ ವೈಯಕ್ತಿಕ ದಾಖಲೆ ಸ್ಪರ್ಶಿಸಿಲ್ಲ"),
+          L("Distribution over accused across all loaded cases", "ಎಲ್ಲಾ ಪ್ರಕರಣಗಳ ಆರೋಪಿಗಳ ಮೇಲಿನ ವಿತರಣೆ")], "b7e 2f9…")}</div>`,
+      speak: L("Property crime skews to urban males aged 26 to 35, matching the serial offender profile.", "ಆಸ್ತಿ ಅಪರಾಧ 26 ರಿಂದ 35 ವಯಸ್ಸಿನ ನಗರ ಪುರುಷರ ಕಡೆಗೆ ವಾಲುತ್ತದೆ."),
+    };
+  }
+
+  // financial / transaction link — deliberately mocked, upfront: emits an FIU-IND request object
+  if (/financ|transaction|bank|money|fiu|launder|ಹಣಕಾಸು|ವಹಿವಾಟು|ಬ್ಯಾಂಕ್|ಹಣ/.test(q)) {
+    const req = {
+      request_type: "FIU-IND / STR lookup", statute: "PMLA 2002 s.12 · gated",
+      subject: R.mask ? "[PII masked]" : "PrakashKumar (P-1001)",
+      linked_cases: ["C-5001", "C-5002"], requested_by: R.name, status: "DRAFT — not transmitted",
+    };
+    return {
+      html: `<div class="bubble"><div class="denied" style="border-color:var(--accent);color:var(--text)">${L(
+          "Live financial-transaction access is legally gated to FIU-IND under PMLA — Project-Rainfall does <b>not</b> query it directly. Instead it drafts the structured request an authorised officer would transmit:",
+          "ನೇರ ಹಣಕಾಸು-ವಹಿವಾಟು ಪ್ರವೇಶ PMLA ಅಡಿಯಲ್ಲಿ FIU-IND ಗೆ ಕಾನೂನುಬದ್ಧವಾಗಿ ಸೀಮಿತ — Project-Rainfall ಇದನ್ನು ನೇರವಾಗಿ ಪ್ರಶ್ನಿಸುವುದಿಲ್ಲ. ಬದಲಿಗೆ ಅಧಿಕೃತ ಅಧಿಕಾರಿ ಕಳುಹಿಸಬೇಕಾದ ರಚನಾತ್ಮಕ ವಿನಂತಿಯನ್ನು ರಚಿಸುತ್ತದೆ:")}</div>
+        <pre class="req mono">${esc(JSON.stringify(req, null, 2))}</pre>
+        ${trail([
+          L("No live financial data accessed — request object only", "ಯಾವುದೇ ನೇರ ಹಣಕಾಸು ಡೇಟಾ ಪ್ರವೇಶಿಸಿಲ್ಲ — ವಿನಂತಿ ವಸ್ತು ಮಾತ್ರ"),
+          L("Transmission requires SP-rank authorisation + PMLA basis", "ಪ್ರಸರಣಕ್ಕೆ SP-ಶ್ರೇಣಿ ಅನುಮತಿ + PMLA ಆಧಾರ ಬೇಕು")], "c41 8ad…")}</div>`,
+      speak: L("Financial access is legally gated to F I U India. I have drafted the request object, not queried live data.", "ಹಣಕಾಸು ಪ್ರವೇಶ FIU ಇಂಡಿಯಾಗೆ ಕಾನೂನುಬದ್ಧವಾಗಿ ಸೀಮಿತ. ನಾನು ವಿನಂತಿ ವಸ್ತುವನ್ನು ರಚಿಸಿದ್ದೇನೆ."),
+    };
+  }
+
   // fallback
   return {
     html: `<div class="bubble"><p>${L("I can retrieve FIR/case details, resolve identities across records, surface serial patterns, map hotspots, and score offender risk — every answer role-filtered and hash-stamped for evidence.", "ನಾನು ಎಫ್‌ಐಆರ್/ಪ್ರಕರಣ ವಿವರ ಪಡೆಯಬಲ್ಲೆ, ದಾಖಲೆಗಳಾದ್ಯಂತ ಗುರುತು ಗುರುತಿಸಬಲ್ಲೆ, ಸರಣಿ ಮಾದರಿ ತೋರಿಸಬಲ್ಲೆ, ಹಾಟ್‌ಸ್ಪಾಟ್ ನಕ್ಷೆ ಮಾಡಬಲ್ಲೆ, ಅಪರಾಧಿ ಅಪಾಯ ಅಂಕ ನೀಡಬಲ್ಲೆ — ಪ್ರತಿ ಉತ್ತರವೂ ಪಾತ್ರ-ಶೋಧಿತ ಮತ್ತು ಸಾಕ್ಷ್ಯಕ್ಕಾಗಿ ಹ್ಯಾಶ್-ಮುದ್ರಿತ.")}</p>
@@ -254,16 +393,64 @@ function route(qRaw) {
   };
 }
 
-function ask() {
+// Live analytics answers (AppSail). Returns null when the intent isn't analytics or the
+// backend is unreachable/denied — the caller then falls back to the curated route().
+async function liveIntent(qRaw) {
+  if (!state.live) return null;
+  const q = qRaw.toLowerCase();
+  try {
+    if (/risk|profile|dangerous|ಅಪಾಯ|ಪ್ರೊಫೈಲ್/.test(q)) {
+      const { data } = await api("risk");
+      const t = data.top[0];
+      const rows = [[L("Overall risk", "ಒಟ್ಟಾರೆ ಅಪಾಯ"), `<span class="chip rust"><span class="dot"></span>${t.score} / 100</span>`],
+        [L("Repeat offending", "ಪುನರಾವರ್ತಿತ ಅಪರಾಧ"), `${t.factors.repeat_offending} — ${t.case_count} ${L("linked cases", "ಸಂಪರ್ಕಿತ ಪ್ರಕರಣಗಳು")}`],
+        [L("Crime severity", "ಅಪರಾಧ ತೀವ್ರತೆ"), `${t.factors.crime_severity} — ${L("max severity", "ಗರಿಷ್ಠ ತೀವ್ರತೆ")} ${t.max_severity}/10`],
+        [L("Geographic spread", "ಭೌಗೋಳಿಕ ಹರಡುವಿಕೆ"), `${t.factors.geographic_spread} — ${t.districts.length} ${L("districts", "ಜಿಲ್ಲೆಗಳು")}`]];
+      const name = ROLES[state.role].mask ? L("[PII masked]", "[ಮಾಹಿತಿ ಮರೆಮಾಡಲಾಗಿದೆ]") : t.person_id;
+      return { html: `<div class="bubble"><p>${L("Highest-risk offender", "ಅತಿ ಹೆಚ್ಚು ಅಪಾಯದ ಅಪರಾಧಿ")} (${esc(name)}) — ${L("live score from", "ನೇರ ಅಂಕ")} ${data.count} ${L("scored offenders", "ಅಪರಾಧಿಗಳಲ್ಲಿ")}:</p>
+          <div class="record"><table><tbody>${rows.map(([k, v]) => `<tr><th style="width:180px">${esc(k)}</th><td>${v}</td></tr>`).join("")}</tbody></table></div>
+          ${trail([L("Live: analytics AppSail /risk over Data Store", "ನೇರ: analytics AppSail /risk"), L("Score = transparent weighted behavioral factors", "ಅಂಕ = ಪಾರದರ್ಶಕ ತೂಕದ ಅಂಶಗಳು")], "live · §63")}</div>`,
+        speak: L(`Highest risk offender scores ${t.score} out of 100.`, `ಅತಿ ಹೆಚ್ಚು ಅಪಾಯದ ಅಪರಾಧಿ 100 ರಲ್ಲಿ ${t.score}.`) };
+    }
+    if (/forecast|trend|early warning|rising|ಮುನ್ಸೂಚನೆ|ಪ್ರವೃತ್ತಿ/.test(q)) {
+      const { data } = await api("forecast");
+      const rows = data.forecast.slice(0, 5).map(f => `<tr><td>${esc(f.key)}</td><td class="num">${f.recent_count}</td><td class="num">${f.trend_slope > 0 ? "+" : ""}${f.trend_slope}/mo</td><td class="num">${f.forecast_next}</td><td>${f.early_warning ? `<span class="chip rust"><span class="dot"></span>${L("warning", "ಎಚ್ಚರಿಕೆ")}</span>` : "—"}</td></tr>`).join("");
+      return { html: `<div class="bubble"><p>${L("Crime forecast (least-squares trend over monthly counts):", "ಅಪರಾಧ ಮುನ್ಸೂಚನೆ (ಮಾಸಿಕ ಎಣಿಕೆಗಳ ಪ್ರವೃತ್ತಿ):")}</p>
+          <div class="record"><table><thead><tr><th>${L("Type", "ಬಗೆ")}</th><th>${L("Recent", "ಇತ್ತೀಚಿನ")}</th><th>${L("Slope", "ಇಳಿಜಾರು")}</th><th>${L("Next", "ಮುಂದೆ")}</th><th>${L("Alert", "ಎಚ್ಚರಿಕೆ")}</th></tr></thead><tbody>${rows}</tbody></table></div>
+          ${trail([L("Live: analytics AppSail /forecast", "ನೇರ: analytics AppSail /forecast"), L("Aggregate — no individual PII touched", "ಒಟ್ಟು — ಯಾವುದೇ ಮಾಹಿತಿ ಇಲ್ಲ")], "live · §63")}</div>`,
+        speak: L("Crime forecast computed live from monthly trends.", "ಮಾಸಿಕ ಪ್ರವೃತ್ತಿಗಳಿಂದ ಅಪರಾಧ ಮುನ್ಸೂಚನೆ.") };
+    }
+    if (/demograph|socio|age|gender|urban|correlat|ವಯಸ್ಸು|ಲಿಂಗ|ನಗರ|ಸಾಮಾಜಿಕ/.test(q)) {
+      const { data } = await api("socio");
+      const bands = {}; // fold crime_by_age_band into an age-band distribution
+      Object.values(data.crime_by_age_band).forEach(byBand => Object.entries(byBand).forEach(([b, n]) => { bands[b] = (bands[b] || 0) + n; }));
+      const tot = Object.values(bands).reduce((a, b) => a + b, 0) || 1;
+      const ageRows = Object.entries(bands).sort().map(([b, n]) => ({ b, v: Math.round(100 * n / tot) }));
+      const urbArr = Array.isArray(data.urbanization) ? data.urbanization : []; // [{district,tier,total_cases}]
+      const tierCount = {};
+      urbArr.forEach(d => { tierCount[d.tier] = (tierCount[d.tier] || 0) + 1; });
+      const urbTot = urbArr.length || 1;
+      const order = { high: 0, medium: 1, low: 2 };
+      const urbRows = Object.entries(tierCount).sort((a, b) => (order[a[0]] ?? 9) - (order[b[0]] ?? 9))
+        .map(([b, n]) => ({ b: b.charAt(0).toUpperCase() + b.slice(1) + L(" urbanization", " ನಗರೀಕರಣ"), v: Math.round(100 * n / urbTot) }));
+      const bars = (title, rs) => `<div class="record"><div class="rhead"><b>${esc(title)}</b></div><div class="socio">${rs.map(r => `<div class="sbar"><span class="lab">${esc(r.b)}</span><i style="width:${r.v}%"></i><span class="num">${r.v}%</span></div>`).join("")}</div></div>`;
+      return { html: `<div class="bubble"><p>${L("Socio-demographic correlation of accused (live aggregate, no PII):", "ಆರೋಪಿಗಳ ಸಾಮಾಜಿಕ-ಜನಸಂಖ್ಯಾ ಸಂಬಂಧ (ನೇರ ಒಟ್ಟು):")}</p>
+          ${bars(L("Age band", "ವಯೋಮಾನ"), ageRows)}${urbRows.length ? bars(L("Urbanization", "ನಗರೀಕರಣ"), urbRows) : ""}
+          ${trail([L("Live: analytics AppSail /sociodemographic", "ನೇರ: analytics AppSail /sociodemographic"), L("Distribution over accused across all cases", "ಎಲ್ಲಾ ಪ್ರಕರಣಗಳ ಆರೋಪಿಗಳ ವಿತರಣೆ")], "live · §63")}</div>`,
+        speak: L("Socio-demographic correlation computed live.", "ಸಾಮಾಜಿಕ-ಜನಸಂಖ್ಯಾ ಸಂಬಂಧ ನೇರವಾಗಿ.") };
+    }
+  } catch (_) { return null; } // denied or offline → fall back to curated route
+  return null;
+}
+
+async function ask() {
   const q = $("#q").value.trim();
   if (!q) return;
   addTurn("user", `<div class="bubble">${esc(q)}</div>`);
   $("#q").value = ""; $("#q").style.height = "auto";
-  const res = route(q);
-  setTimeout(() => {
-    addTurn("system", res.html);
-    if (state._speak) speak(res.speak);
-  }, 260);
+  const res = (await liveIntent(q)) || route(q);
+  addTurn("system", res.html);
+  if (state._speak) speak(res.speak);
 }
 
 /* ============================ entity resolution ============================ */
@@ -329,6 +516,65 @@ function renderPatterns() {
   });
 }
 
+/* ============================ criminal network ============================ */
+const NET_KIND = {
+  accused:  { cls: "n-accused",  lab: () => L("Accused", "ಆರೋಪಿ") },
+  victim:   { cls: "n-victim",   lab: () => L("Victim", "ಸಂತ್ರಸ್ತ") },
+  case:     { cls: "n-case",     lab: () => L("Case", "ಪ್ರಕರಣ") },
+  cluster:  { cls: "n-cluster",  lab: () => L("Serial cluster", "ಸರಣಿ ಕ್ಲಸ್ಟರ್") },
+};
+function renderNetwork() {
+  const { nodes, edges } = DATA.network;
+  const mask = ROLES[state.role].mask;
+  const pos = Object.fromEntries(nodes.map((n) => [n.id, n]));
+  const isPII = (n) => n.kind === "accused" || n.kind === "victim";
+  const lines = edges.map((e) => {
+    const a = pos[e.a], b = pos[e.b];
+    return `<line class="netedge${e.weak ? " weak" : ""}" x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}"><title>${esc(e.rel)}</title></line>`;
+  }).join("");
+  const dots = nodes.map((n, i) => {
+    const label = mask && isPII(n) ? "•••" : n.label;
+    const r = n.kind === "cluster" ? 3.6 : n.kind === "case" ? 2.6 : 3;
+    return `<g class="netnode ${NET_KIND[n.kind].cls}" style="animation-delay:${(i * 0.05).toFixed(2)}s">
+      <circle cx="${n.x}" cy="${n.y}" r="${r}"><title>${esc(n.id)} · ${esc(NET_KIND[n.kind].lab())}</title></circle>
+      <text x="${n.x}" y="${n.y - r - 1.4}" text-anchor="middle">${esc(label)}</text></g>`;
+  }).join("");
+  $("#netgraph").innerHTML = lines + dots;
+  $("#netlegend").innerHTML = Object.values(NET_KIND).map((k) =>
+    `<span class="lk"><i class="${k.cls}"></i>${esc(k.lab())}</span>`).join("");
+}
+
+/* ============================ PDF export (Req 4) ============================ */
+function exportPDF() {
+  const turns = $$("#transcript .turn");
+  if (!turns.length) { toast(L("Nothing to export yet — ask a question first.", "ರಫ್ತು ಮಾಡಲು ಏನೂ ಇಲ್ಲ — ಮೊದಲು ಪ್ರಶ್ನೆ ಕೇಳಿ.")); return; }
+  const R = ROLES[state.role];
+  const now = new Date().toISOString().replace("T", " ").slice(0, 19) + " UTC";
+  const body = turns.map((tn) => {
+    const who = tn.classList.contains("user") ? R.name : "Project-Rainfall";
+    return `<div class="t"><div class="w">${esc(who)}</div><div class="b">${tn.querySelector(".body .bubble, .bubble") ? tn.querySelector(".body").innerHTML : tn.innerHTML}</div></div>`;
+  }).join("");
+  const doc = `<!doctype html><html><head><meta charset="utf-8"><title>Rainfall conversation record</title>
+    <style>body{font:13px/1.5 Georgia,serif;color:#1c1e1b;max-width:720px;margin:32px auto;padding:0 20px}
+    .hd{border-bottom:2px solid #1c1e1b;padding-bottom:8px;margin-bottom:16px}
+    .hd b{font-size:17px} .meta{color:#6b6e5e;font-size:11px;margin-top:4px}
+    .t{margin:12px 0;padding:10px 12px;border:1px solid #c9c2ac;border-radius:3px}
+    .w{font-weight:bold;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#a5432c;margin-bottom:4px}
+    table{border-collapse:collapse;width:100%;font-size:12px} td,th{border:1px solid #c9c2ac;padding:3px 6px;text-align:left}
+    .mono{font-family:Consolas,monospace;font-size:11px} .hint{color:#6b6e5e;font-size:11px}
+    .ft{margin-top:20px;border-top:1px solid #c9c2ac;padding-top:8px;color:#6b6e5e;font-size:11px}</style></head>
+    <body><div class="hd"><b>Project-Rainfall — Conversation Record</b>
+      <div class="meta">Role: ${esc(R.name)} · ${esc(R.scope)} &nbsp;|&nbsp; Exported: ${esc(now)} &nbsp;|&nbsp; Restricted · Official Use</div></div>
+      ${body}
+      <div class="ft">Every answer above was role-filtered before retrieval and hash-stamped for BSA 2023 §63.
+      For a court-admissible copy, use the backend encrypted-export service (AES-GCM) — this local PDF is a working record.</div>
+      <script>onload=function(){print()}<\/script></body></html>`;
+  const w = window.open("", "_blank");
+  if (!w) { toast(L("Allow pop-ups to export the PDF.", "ಪಿಡಿಎಫ್ ರಫ್ತಿಗೆ ಪಾಪ್-ಅಪ್ ಅನುಮತಿಸಿ.")); return; }
+  w.document.write(doc); w.document.close();
+  toast(L("Conversation record opened — save as PDF from the print dialog.", "ಸಂಭಾಷಣೆ ದಾಖಲೆ ತೆರೆಯಲಾಗಿದೆ — ಮುದ್ರಣ ಸಂವಾದದಿಂದ ಪಿಡಿಎಫ್ ಆಗಿ ಉಳಿಸಿ."));
+}
+
 /* ============================ evidence chain ============================ */
 const FINDING = {
   artifact_type: "cluster", id: "SERIAL-1",
@@ -362,7 +608,15 @@ async function sealFinding() {
   if (stamp.classList.contains("sealed")) return;
   stamp.classList.add("pressing");
   $("#sealBtn").disabled = true;
-  const hash = await sha256(JSON.stringify(FINDING.output) + JSON.stringify(FINDING.inputs));
+  // Prefer the live legal AppSail: it hash-stamps server-side and persists an EvidenceRecords row.
+  let hash;
+  try {
+    const { data } = await api("seal", { finding: JSON.stringify({
+      artifact_type: FINDING.artifact_type, inputs: FINDING.inputs, output: FINDING.output }) });
+    hash = data.output_hash;
+  } catch (_) {
+    hash = await sha256(JSON.stringify(FINDING.output) + JSON.stringify(FINDING.inputs));
+  }
   sealedHash = hash;
   setTimeout(() => {
     stamp.classList.remove("pressing");
@@ -455,17 +709,19 @@ function initTheme() {
 
 /* ============================ boot ============================ */
 function boot() {
-  renderStats(); renderMatches(); renderPatterns(); renderCert(null, false); applyLang(); applyRole();
+  renderStats(); renderMatches(); renderPatterns(); renderNetwork(); renderCert(null, false); applyLang(); applyRole();
   $("#erBadge").textContent = DATA.matches.length;
+  loadLive(); // replace sample with live AppSail ML output where the backend is reachable
 
   $$(".nav").forEach((n) => n.addEventListener("click", () => switchView(n.dataset.view)));
-  $("#role").addEventListener("change", (e) => { state.role = e.target.value; applyRole(); });
+  $("#role").addEventListener("change", (e) => { state.role = e.target.value; applyRole(); renderNetwork(); loadLive(); });
   $$(".seg [data-lang]").forEach((b) => b.addEventListener("click", () => {
     state.lang = b.dataset.lang;
     $$(".seg [data-lang]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
-    applyLang(); applyRole(); // reset greeting/transcript into the new language
+    applyLang(); applyRole(); renderNetwork(); renderLiveBadge(); // reset greeting/transcript into the new language
   }));
   $("#ask").addEventListener("click", ask);
+  $("#exportBtn").addEventListener("click", exportPDF);
   $("#q").addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); ask(); } });
   $("#q").addEventListener("input", (e) => { e.target.style.height = "auto"; e.target.style.height = e.target.scrollHeight + "px"; });
   $("#voiceBtn").addEventListener("click", toggleVoice);

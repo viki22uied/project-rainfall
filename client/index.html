@@ -63,6 +63,10 @@
         <span data-i18n="nav_mo">Serial Patterns</span>
         <span class="chip rust badge">3</span>
       </button>
+      <button class="nav" data-view="network">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="6" cy="6" r="2.2"/><circle cx="18" cy="8" r="2.2"/><circle cx="9" cy="18" r="2.2"/><circle cx="17" cy="17" r="2.2"/><path d="M7.6 7.4l6 6M8 6.6l8 1M10.8 17.4l4.4-.6"/></svg>
+        <span data-i18n="nav_network">Network</span>
+      </button>
       <button class="nav" data-view="evidence">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg>
         <span data-i18n="nav_evidence">Evidence Chain</span>
@@ -87,6 +91,7 @@
               <div class="field">
                 <textarea id="q" rows="1" data-i18n-ph="ask_ph" placeholder="Ask about a case, person, hotspot, or pattern…"></textarea>
               </div>
+              <button class="btn" id="exportBtn" data-i18n="export_btn" title="Save conversation as PDF">Export PDF</button>
               <button class="btn primary" id="ask" data-i18n="send">Send</button>
             </div>
           </div>
@@ -114,6 +119,19 @@
           <p data-i18n="mo_p">Unsolved cases linked by modus operandi — no named suspect required. Cross-jurisdiction spread is the signal, not a coincidence.</p>
         </header>
         <div class="patterns" id="patterns"></div>
+      </section>
+
+      <!-- CRIMINAL NETWORK -->
+      <section class="view" id="view-network">
+        <header>
+          <div class="eyebrow">Requirement 06</div>
+          <h1 data-i18n="net_h">Criminal Network</h1>
+          <p data-i18n="net_p">Persons, cases and clusters as one relationship graph.</p>
+        </header>
+        <div class="panel" style="padding:16px">
+          <div class="netlegend" id="netlegend"></div>
+          <svg class="netgraph" id="netgraph" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet"></svg>
+        </div>
       </section>
 
       <!-- EVIDENCE CHAIN -->

@@ -12,5 +12,23 @@
   },
   "apig": {
     "enabled": true
-  }
+  },
+  "appsail": [
+    {
+      "source": "appsail\\entity-resolution",
+      "name": "entityresolution"
+    },
+    {
+      "source": "appsail\\mo-clustering",
+      "name": "moclustering"
+    },
+    {
+      "source": "appsail\\analytics",
+      "name": "analytics"
+    },
+    {
+      "source": "appsail\\legal",
+      "name": "legal"
+    }
+  ]
 }

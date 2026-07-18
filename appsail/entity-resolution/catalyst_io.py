@@ -9,14 +9,14 @@ def _client():
 
 
 def load_persons():
-    rows = _client().zcql().execute_zcql_query(
+    rows = _client().zcql().execute_query(
         "SELECT person_id, name_as_recorded FROM Persons")
     return [{"person_id": r["Persons"]["person_id"], "name": r["Persons"]["name_as_recorded"]}
             for r in rows]
 
 
 def load_truth():
-    rows = _client().zcql().execute_zcql_query(
+    rows = _client().zcql().execute_query(
         "SELECT biz_id, truth_key FROM EvalGroundTruth WHERE entity_type = 'person'")
     return {r["EvalGroundTruth"]["biz_id"]: r["EvalGroundTruth"]["truth_key"] for r in rows}
 

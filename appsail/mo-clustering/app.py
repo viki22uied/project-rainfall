@@ -26,6 +26,13 @@ def do_cluster():
     cases = catalyst_io.load_unsolved_cases()
     clusters = cluster_cases(cases, threshold)
     written = catalyst_io.write_clusters(clusters)
+    # Attach a representative MO signature (members share it — that's why they clustered).
+    by_id = {c["case_id"]: c for c in cases}
+    for cl in clusters:
+        rep = by_id.get(cl["case_ids"][0], {})
+        cl["crime_type"] = rep.get("crime_type")
+        cl["signature"] = {"Entry": rep.get("entry_method"), "Weapon": rep.get("weapon"),
+                           "Target": rep.get("target_type"), "Time": rep.get("time_band")}
     return jsonify(unsolved=len(cases), clusters=len(clusters), written=written,
                    threshold=threshold, patterns=clusters)
 

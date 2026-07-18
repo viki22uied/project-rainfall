@@ -10,5 +10,37 @@
       "ip": {}
     },
     "system": true
+  },
+  {
+    "name": "Client CSS",
+    "source_endpoint": "/app/main.css",
+    "target_endpoint": "/app/main.css",
+    "target": "client",
+    "method": "GET",
+    "throttling": {
+      "overall": {},
+      "ip": {}
+    }
+  },
+  {
+    "name": "Client JS",
+    "source_endpoint": "/app/main.js",
+    "target_endpoint": "/app/main.js",
+    "target": "client",
+    "method": "GET",
+    "throttling": {
+      "overall": {},
+      "ip": {}
+    }
+  },
+  {
+    "name": "Rainfall API",
+    "source_endpoint": "/server/rainfall-node-api/execute",
+    "target_endpoint": "/server/rainfall-node-api/execute",
+    "method": "POST",
+    "throttling": {
+      "overall": {},
+      "ip": {}
+    }
   }
 ]

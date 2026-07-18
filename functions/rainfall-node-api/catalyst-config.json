@@ -3,7 +3,9 @@
 		"name": "rainfall-node-api",
 		"stack": "node20",
 		"type": "basicio",
-		"env_variables": {}
+		"env_variables": {
+			"ALLOW_ACTOR_EMAIL_OVERRIDE": "true"
+		}
 	},
 	"execution": {
 		"main": "index.js"

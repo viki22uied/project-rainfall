@@ -32,6 +32,21 @@ def do_resolve():
                    written=written, threshold=threshold, status="pending")
 
 
+@app.route("/candidates")
+def do_candidates():
+    """Ranked candidate matches enriched with recorded names, for human review.
+    No write — read-only view of what /resolve would surface (pending confirmation)."""
+    threshold = int(request.args.get("threshold", DEFAULT_THRESHOLD))
+    limit = int(request.args.get("limit", 12))
+    persons = catalyst_io.load_persons()
+    name_by = {p["person_id"]: p["name"] for p in persons}
+    matches = resolve(persons, threshold)[:limit]
+    for m in matches:
+        m["name_a"] = name_by.get(m["person_a"], m["person_a"])
+        m["name_b"] = name_by.get(m["person_b"], m["person_b"])
+    return jsonify(threshold=threshold, count=len(matches), candidates=matches)
+
+
 @app.route("/evaluate")
 def do_evaluate():
     threshold = int(request.args.get("threshold", DEFAULT_THRESHOLD))

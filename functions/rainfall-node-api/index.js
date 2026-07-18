@@ -10,6 +10,36 @@ const RESOURCE = {
   casepersons: { table: 'CasePersons',  scopeCols: [] },
 };
 
+// AppSail ML services. Local `catalyst serve` ports by default; override per env in the
+// cloud (each AppSail's real URL). ML is Python/AppSail per PRD §7 — Node only routes to it.
+const APPSAIL = {
+  ER:        process.env.APPSAIL_ER        || 'http://localhost:3004',
+  MO:        process.env.APPSAIL_MO        || 'http://localhost:3001',
+  ANALYTICS: process.env.APPSAIL_ANALYTICS || 'http://localhost:3002',
+  LEGAL:     process.env.APPSAIL_LEGAL     || 'http://localhost:3003',
+};
+
+// ML actions the gateway proxies AFTER the role check (PRD §4: role-filter before any ML).
+// pii:true actions expose individual identities → denied to policymaker (aggregates only).
+const ACTIONS = {
+  er_candidates: { pii: true,  svc: 'ER',        path: '/candidates?threshold=90&limit=12', method: 'GET'  },
+  mo_clusters:   { pii: false, svc: 'MO',        path: '/cluster?threshold=1.0',            method: 'POST' },
+  risk:          { pii: true,  svc: 'ANALYTICS', path: '/risk',                             method: 'GET'  },
+  socio:         { pii: false, svc: 'ANALYTICS', path: '/sociodemographic',                 method: 'GET'  },
+  forecast:      { pii: false, svc: 'ANALYTICS', path: '/forecast?key=crime_type',          method: 'GET'  },
+  seal:          { pii: false, svc: 'LEGAL',     path: '/seal',                             method: 'POST', bodyArg: 'finding' },
+};
+
+async function callAppsail(def, body) {
+  const res = await fetch(APPSAIL[def.svc] + def.path, {
+    method: def.method,
+    headers: body ? { 'Content-Type': 'application/json' } : {},
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!res.ok) throw new Error(`appsail ${def.svc} ${res.status}`);
+  return res.json();
+}
+
 /**
  * RBAC + immutable-audit gateway. Every request is role-filtered BEFORE the DB read,
  * and every request (allowed, masked, or denied) is written to the hash-chained AuditLog.
@@ -22,7 +52,13 @@ const RESOURCE = {
 module.exports = async (context, basicIO) => {
   const app = catalyst.initialize(context);
   const zcql = app.zcql();
-  const respond = (code, body) => { basicIO.write(JSON.stringify({ status: code, ...body })); context.close(); };
+  // basicIO.write appends across calls; local serve caps each call at 1024 chars, so chunk
+  // the payload (harmless in the cloud, where writes also concatenate into one response body).
+  const respond = (code, body) => {
+    const s = JSON.stringify({ status: code, ...body });
+    for (let i = 0; i < s.length; i += 1000) basicIO.write(s.slice(i, i + 1000));
+    context.close();
+  };
 
   const resource = basicIO.getArgument('resource') || 'cases';
   const elevated = String(basicIO.getArgument('elevated')) === 'true';
@@ -48,6 +84,27 @@ module.exports = async (context, basicIO) => {
       `FROM Users WHERE auth_email = '${email.replace(/'/g, "''")}'`);
     const user = users[0] && users[0].Users;
     if (!user) return respond('failure', { error: 'user not provisioned' });
+
+    // 1b. ML action? Role-gate BEFORE proxying to AppSail, then audit the call.
+    const action = basicIO.getArgument('action');
+    if (action === 'stats') {
+      const stats = await computeStats(zcql);
+      await writeAudit(app, zcql, user, 'stats', { decision: 'allowed', reason: '', maskPII: false });
+      return respond('success', { stats });
+    }
+    if (action && ACTIONS[action]) {
+      const def = ACTIONS[action];
+      if (def.pii && user.role === 'policymaker') {
+        const denied = { decision: 'denied', reason: 'policymaker: aggregates only, no individual identities', maskPII: false, scope: null };
+        const seq = await writeAudit(app, zcql, user, action, denied);
+        return respond('failure', { error: 'access denied', reason: denied.reason, audit_seq: seq });
+      }
+      let body;
+      if (def.bodyArg) { try { body = JSON.parse(basicIO.getArgument(def.bodyArg) || '{}'); } catch (_) { body = {}; } }
+      const data = await callAppsail(def, body);
+      const seq = await writeAudit(app, zcql, user, action, { decision: 'allowed', reason: '', maskPII: false });
+      return respond('success', { action, audit_seq: seq, data });
+    }
 
     // 2. Decide access BEFORE touching case data.
     const verdict = decideAccess(user, { resource, elevated });
@@ -86,6 +143,15 @@ module.exports = async (context, basicIO) => {
     return respond('failure', { error: 'internal error' });
   }
 };
+
+// Aggregate counts for the console header — cheap full scans (tables are small).
+async function computeStats(zcql) {
+  const cases = await zcql.executeZCQLQuery('SELECT status FROM Cases LIMIT 300');
+  const persons = await zcql.executeZCQLQuery('SELECT ROWID FROM Persons LIMIT 300');
+  const total = cases.length;
+  const unsolved = cases.filter(r => (r.Cases.status || '').toLowerCase() === 'unsolved').length;
+  return { cases: total, unsolved, persons: persons.length };
+}
 
 // Append a hash-chained row to AuditLog (fetch last row for prev_hash, then insert).
 async function writeAudit(app, zcql, user, resource, verdict, caseIds = []) {

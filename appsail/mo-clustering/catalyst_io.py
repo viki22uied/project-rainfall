@@ -15,14 +15,14 @@ def _now():
 
 
 def load_unsolved_cases():
-    rows = _client().zcql().execute_zcql_query(
+    rows = _client().zcql().execute_query(
         "SELECT case_id, crime_type, entry_method, weapon, target_type, time_band, "
         "district_name, status FROM Cases WHERE status = 'Unsolved'")
     return [r["Cases"] for r in rows]
 
 
 def load_truth():
-    rows = _client().zcql().execute_zcql_query(
+    rows = _client().zcql().execute_query(
         "SELECT biz_id, truth_key FROM EvalGroundTruth WHERE entity_type = 'case'")
     return {r["EvalGroundTruth"]["biz_id"]: r["EvalGroundTruth"]["truth_key"] for r in rows}
 

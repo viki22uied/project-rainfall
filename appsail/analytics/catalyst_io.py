@@ -4,7 +4,7 @@
 def _zcql(q):
     import zcatalyst_sdk
     from flask import request
-    return zcatalyst_sdk.initialize(req=request).zcql().execute_zcql_query(q)
+    return zcatalyst_sdk.initialize(req=request).zcql().execute_query(q)
 
 
 def load_cases():
