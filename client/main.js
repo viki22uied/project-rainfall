@@ -53,8 +53,49 @@ const DATA = {
   districtsTop: [
     { d: "Bengaluru City", ipc: 28666, sll: 17521, total: 46187 },
     { d: "Bengaluru District", ipc: 6031, sll: 961, total: 6992 },
-    { d: "Tumakuru", ipc: 3894, sll: 1102, total: 4996 },
+    { d: "Tumakuru", ipc: 5520, sll: 1524, total: 7044 },
     { d: "Bagalkot", ipc: 2199, sll: 735, total: 2934 },
+  ],
+  // all 37 real districts — karnataka_district_crime_2022_real.csv joined with
+  // karnataka_district_centroids.csv (K.Railways / Total Districts rows dropped: not places).
+  districts: [
+    { d: "Bengaluru City", ipc: 28666, sll: 17521, total: 46187, lat: 12.9716, lng: 77.5946 },
+    { d: "Tumakuru", ipc: 5520, sll: 1524, total: 7044, lat: 13.3392, lng: 77.1139 },
+    { d: "Bengaluru District", ipc: 6031, sll: 961, total: 6992, lat: 13.24, lng: 77.45 },
+    { d: "Shimoga", ipc: 4591, sll: 1500, total: 6091, lat: 13.9299, lng: 75.5681 },
+    { d: "Belagavi District", ipc: 4703, sll: 1324, total: 6027, lat: 15.8497, lng: 74.4977 },
+    { d: "Ramanagara", ipc: 4155, sll: 1720, total: 5875, lat: 12.7217, lng: 77.2812 },
+    { d: "Hassan", ipc: 4652, sll: 1189, total: 5841, lat: 13.0072, lng: 76.1004 },
+    { d: "Mandya", ipc: 4830, sll: 781, total: 5611, lat: 12.5242, lng: 76.8958 },
+    { d: "Mysuru District", ipc: 4315, sll: 1088, total: 5403, lat: 12.1, lng: 76.4 },
+    { d: "Chitradurga", ipc: 4057, sll: 1264, total: 5321, lat: 14.2251, lng: 76.398 },
+    { d: "Davanagere", ipc: 3396, sll: 995, total: 4391, lat: 14.4644, lng: 75.9218 },
+    { d: "Chikkaballapura", ipc: 2577, sll: 1743, total: 4320, lat: 13.4355, lng: 77.7315 },
+    { d: "Vijayapura", ipc: 2858, sll: 1438, total: 4296, lat: 16.8302, lng: 75.71 },
+    { d: "Bidar", ipc: 3136, sll: 886, total: 4022, lat: 17.9104, lng: 77.5199 },
+    { d: "Raichur", ipc: 2577, sll: 1348, total: 3925, lat: 16.2076, lng: 77.3463 },
+    { d: "Chikkamagaluru", ipc: 2759, sll: 1096, total: 3855, lat: 13.3161, lng: 75.772 },
+    { d: "Uttara Kannada", ipc: 2323, sll: 1202, total: 3525, lat: 14.7999, lng: 74.6997 },
+    { d: "Kalaburgi", ipc: 2462, sll: 850, total: 3312, lat: 17.3297, lng: 76.8343 },
+    { d: "Mysuru City", ipc: 2658, sll: 647, total: 3305, lat: 12.2958, lng: 76.6394 },
+    { d: "Ballari", ipc: 1792, sll: 1434, total: 3226, lat: 15.1394, lng: 76.9214 },
+    { d: "Haveri", ipc: 2409, sll: 767, total: 3176, lat: 14.7936, lng: 75.4044 },
+    { d: "Hubballi Dharwad", ipc: 2006, sll: 1139, total: 3145, lat: 15.3647, lng: 75.124 },
+    { d: "Koppal", ipc: 2175, sll: 893, total: 3068, lat: 15.3547, lng: 76.1548 },
+    { d: "Bagalkot", ipc: 2199, sll: 735, total: 2934, lat: 16.1691, lng: 75.6597 },
+    { d: "Udupi", ipc: 2342, sll: 566, total: 2908, lat: 13.3409, lng: 74.7421 },
+    { d: "Vijayanagara", ipc: 1795, sll: 1091, total: 2886, lat: 15.2385, lng: 76.4614 },
+    { d: "Kolar", ipc: 2417, sll: 360, total: 2777, lat: 13.1362, lng: 78.1298 },
+    { d: "Mangaluru City", ipc: 1979, sll: 686, total: 2665, lat: 12.9141, lng: 74.856 },
+    { d: "Chamarajnagar", ipc: 1705, sll: 668, total: 2373, lat: 11.9236, lng: 76.9456 },
+    { d: "Kalaburgi City", ipc: 1768, sll: 582, total: 2350, lat: 17.3297, lng: 76.8343 },
+    { d: "Belagavi City", ipc: 1721, sll: 406, total: 2127, lat: 15.8497, lng: 74.4977 },
+    { d: "Dakshina Kannada", ipc: 1812, sll: 266, total: 2078, lat: 12.92, lng: 75.15 },
+    { d: "Gadag", ipc: 1060, sll: 856, total: 1916, lat: 15.431, lng: 75.637 },
+    { d: "Yadgiri", ipc: 1316, sll: 508, total: 1824, lat: 16.7693, lng: 77.1376 },
+    { d: "Dharwad", ipc: 1193, sll: 536, total: 1729, lat: 15.4589, lng: 75.0078 },
+    { d: "Kodagu", ipc: 1355, sll: 284, total: 1639, lat: 12.3375, lng: 75.8069 },
+    { d: "K.G.F.", ipc: 855, sll: 370, total: 1225, lat: 12.9585, lng: 78.2677 },
   ],
   // criminal network — nodes (persons/cases) + relationships. PII masked at render for masked roles.
   network: {
@@ -91,9 +132,12 @@ const I18N = {
   en: {
     brand_sub: "KSP Crime Intelligence", classif: "Restricted · Official Use", voice: "Speak",
     nav_head: "Workspace", nav_console: "Query Console", nav_er: "Entity Resolution",
-    nav_mo: "Serial Patterns", nav_network: "Network", nav_evidence: "Evidence Chain", signed_in: "Signed in", send: "Send",
+    nav_mo: "Serial Patterns", nav_network: "Network", nav_hotspots: "Hotspots", nav_evidence: "Evidence Chain", signed_in: "Signed in", send: "Send",
     export_btn: "Export PDF", ask_ph: "Ask about a case, person, hotspot, or pattern…",
     net_h: "Criminal Network", net_p: "Persons, cases and clusters as one relationship graph. Confirmed identities collapse into a single node; cross-jurisdiction co-offending links surface here.",
+    hs_h: "Crime Hotspots", hs_p: "District-level crime intensity, 2022 snapshot. Click a district to drill in — detail shown depends on your role.",
+    hs_empty: "Select a district on the map.", hs_investigator_note: "Investigators see their own station's cases only, regardless of district clicked.",
+    hs_denied: "Outside your assigned district — access denied.", hs_aggregate_only: "State aggregates only — no individual case records for this role.",
     er_h: "Entity Resolution", er_p: "Candidate matches across inconsistent records — scored, never auto-merged. An analyst or supervisor confirms before two records become one identity.",
     er_pending: "Candidate matches — pending review",
     mo_h: "Serial-Pattern Analysis", mo_p: "Unsolved cases linked by modus operandi — no named suspect required. Cross-jurisdiction spread is the signal, not a coincidence.",
@@ -103,9 +147,12 @@ const I18N = {
   kn: {
     brand_sub: "ಕೆಎಸ್‌ಪಿ ಅಪರಾಧ ಗುಪ್ತಚರ", classif: "ನಿರ್ಬಂಧಿತ · ಅಧಿಕೃತ ಬಳಕೆ", voice: "ಮಾತನಾಡಿ",
     nav_head: "ಕಾರ್ಯಕ್ಷೇತ್ರ", nav_console: "ಪ್ರಶ್ನೆ ಫಲಕ", nav_er: "ವ್ಯಕ್ತಿ ಗುರುತಿಸುವಿಕೆ",
-    nav_mo: "ಸರಣಿ ಮಾದರಿಗಳು", nav_network: "ಜಾಲ", nav_evidence: "ಸಾಕ್ಷ್ಯ ಸರಪಳಿ", signed_in: "ಪ್ರವೇಶಿಸಿದವರು", send: "ಕಳುಹಿಸಿ",
+    nav_mo: "ಸರಣಿ ಮಾದರಿಗಳು", nav_network: "ಜಾಲ", nav_hotspots: "ಹಾಟ್‌ಸ್ಪಾಟ್‌ಗಳು", nav_evidence: "ಸಾಕ್ಷ್ಯ ಸರಪಳಿ", signed_in: "ಪ್ರವೇಶಿಸಿದವರು", send: "ಕಳುಹಿಸಿ",
     export_btn: "ಪಿಡಿಎಫ್ ರಫ್ತು", ask_ph: "ಪ್ರಕರಣ, ವ್ಯಕ್ತಿ, ಹಾಟ್‌ಸ್ಪಾಟ್ ಅಥವಾ ಮಾದರಿ ಬಗ್ಗೆ ಕೇಳಿ…",
     net_h: "ಅಪರಾಧ ಜಾಲ", net_p: "ವ್ಯಕ್ತಿಗಳು, ಪ್ರಕರಣಗಳು ಮತ್ತು ಕ್ಲಸ್ಟರ್‌ಗಳು ಒಂದೇ ಸಂಬಂಧ ಗ್ರಾಫ್ ಆಗಿ. ದೃಢೀಕೃತ ಗುರುತುಗಳು ಒಂದೇ ನೋಡ್ ಆಗಿ ಸೇರುತ್ತವೆ; ಗಡಿ-ದಾಟುವ ಸಹ-ಅಪರಾಧ ಕೊಂಡಿಗಳು ಇಲ್ಲಿ ಕಾಣಿಸುತ್ತವೆ.",
+    hs_h: "ಅಪರಾಧ ಹಾಟ್‌ಸ್ಪಾಟ್‌ಗಳು", hs_p: "ಜಿಲ್ಲಾ ಮಟ್ಟದ ಅಪರಾಧ ತೀವ್ರತೆ, 2022 ಸ್ನ್ಯಾಪ್‌ಶಾಟ್. ವಿವರಗಳಿಗೆ ಜಿಲ್ಲೆಯ ಮೇಲೆ ಕ್ಲಿಕ್ ಮಾಡಿ — ನಿಮ್ಮ ಪಾತ್ರವನ್ನು ಅವಲಂಬಿಸಿ ವಿವರ ಬದಲಾಗುತ್ತದೆ.",
+    hs_empty: "ನಕ್ಷೆಯಲ್ಲಿ ಜಿಲ್ಲೆಯನ್ನು ಆಯ್ಕೆಮಾಡಿ.", hs_investigator_note: "ಯಾವುದೇ ಜಿಲ್ಲೆ ಕ್ಲಿಕ್ ಮಾಡಿದರೂ ತನಿಖಾಧಿಕಾರಿಗಳಿಗೆ ತಮ್ಮ ಠಾಣೆಯ ಪ್ರಕರಣಗಳಷ್ಟೇ ಕಾಣಿಸುತ್ತವೆ.",
+    hs_denied: "ನಿಮ್ಮ ನಿಯೋಜಿತ ಜಿಲ್ಲೆಯ ಹೊರಗೆ — ಪ್ರವೇಶ ನಿರಾಕರಿಸಲಾಗಿದೆ.", hs_aggregate_only: "ರಾಜ್ಯ ಒಟ್ಟುಗಳಷ್ಟೇ — ಈ ಪಾತ್ರಕ್ಕೆ ಪ್ರತ್ಯೇಕ ಪ್ರಕರಣ ದಾಖಲೆಗಳಿಲ್ಲ.",
     er_h: "ವ್ಯಕ್ತಿ ಗುರುತಿಸುವಿಕೆ", er_p: "ಅಸಮಂಜಸ ದಾಖಲೆಗಳಾದ್ಯಂತ ಸಂಭಾವ್ಯ ಹೊಂದಾಣಿಕೆಗಳು — ಅಂಕ ನೀಡಲಾಗಿದೆ, ಸ್ವಯಂ-ವಿಲೀನಗೊಳಿಸಿಲ್ಲ. ವಿಶ್ಲೇಷಕ ಅಥವಾ ಮೇಲ್ವಿಚಾರಕ ದೃಢೀಕರಿಸುತ್ತಾರೆ.",
     er_pending: "ಸಂಭಾವ್ಯ ಹೊಂದಾಣಿಕೆಗಳು — ಪರಿಶೀಲನೆ ಬಾಕಿ",
     mo_h: "ಸರಣಿ ಮಾದರಿ ವಿಶ್ಲೇಷಣೆ", mo_p: "ಕಾರ್ಯವಿಧಾನದಿಂದ ಸಂಪರ್ಕಿಸಲಾದ ಬಗೆಹರಿಯದ ಪ್ರಕರಣಗಳು — ಶಂಕಿತನ ಹೆಸರು ಅಗತ್ಯವಿಲ್ಲ. ಗಡಿ-ದಾಟುವ ಹರಡುವಿಕೆಯೇ ಸೂಚನೆ.",
@@ -307,6 +354,7 @@ function route(qRaw) {
         <div class="record"><div class="rhead"><b>${L("District crime intensity", "ಜಿಲ್ಲಾ ಅಪರಾಧ ತೀವ್ರತೆ")}</b><span class="chip">${L("source-year 2022 · snapshot", "ಮೂಲ-ವರ್ಷ 2022 · ಸ್ನ್ಯಾಪ್‌ಶಾಟ್")}</span></div>
           <table><thead><tr><th>${L("District", "ಜಿಲ್ಲೆ")}</th><th>IPC</th><th>SLL</th><th>${L("Total", "ಒಟ್ಟು")}</th></tr></thead><tbody>${rows}</tbody></table></div>
         <p class="hint" style="margin-top:8px">${L("Forecast: Burglary rising fastest (slope +0.35/mo) — early warning flagged.", "ಮುನ್ಸೂಚನೆ: ಕಳ್ಳತನ ಅತಿ ವೇಗವಾಗಿ ಏರುತ್ತಿದೆ (ಇಳಿಜಾರು +0.35/ತಿಂಗಳು) — ಮುನ್ನೆಚ್ಚರಿಕೆ ಗುರುತಿಸಲಾಗಿದೆ.")}</p>
+        <p class="hint">${L("See the Hotspots map for the full district-by-district view with drill-down.", "ಸಂಪೂರ್ಣ ಜಿಲ್ಲಾವಾರು ವೀಕ್ಷಣೆಗೆ ಹಾಟ್‌ಸ್ಪಾಟ್‌ಗಳ ನಕ್ಷೆ ನೋಡಿ.")}</p>
         ${trail([
           L("Aggregate query — no individual PII touched", "ಒಟ್ಟು ಪ್ರಶ್ನೆ — ಯಾವುದೇ ವೈಯಕ್ತಿಕ ಮಾಹಿತಿ ಸ್ಪರ್ಶಿಸಿಲ್ಲ"),
           L("Real KSP 2022 IPC/SLL totals", "ನೈಜ KSP 2022 IPC/SLL ಒಟ್ಟುಗಳು"),
@@ -533,6 +581,107 @@ function renderPatterns() {
   });
 }
 
+/* ============================ hotspot map (Leaflet + OSM, vendored) ============================ */
+let hsMap = null;
+let hsMarkers = {}; // district name -> {marker, circle}
+let hsSelected = null;
+
+function districtTier(total, sorted) {
+  const n = sorted.length;
+  const rank = sorted.findIndex((d) => d.d === total.d); // sorted desc by total
+  if (rank < n / 3) return "high";
+  if (rank < (2 * n) / 3) return "medium";
+  return "low";
+}
+
+function initHotspotMap() {
+  if (hsMap) { hsMap.invalidateSize(); return; }
+  const Leaflet = window.L; // our own bilingual L() helper shadows the Leaflet global by name
+  hsMap = Leaflet.map("hsMap", { attributionControl: true, zoomControl: true, minZoom: 6, maxZoom: 11 })
+    .setView([15.3, 75.7], 7); // Karnataka centroid-ish
+  Leaflet.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19, attribution: "© OpenStreetMap contributors",
+  }).addTo(hsMap);
+
+  const sorted = [...DATA.districts].sort((a, b) => b.total - a.total);
+  const top5 = new Set(sorted.slice(0, 5).map((d) => d.d));
+  const maxTotal = sorted[0].total;
+
+  sorted.forEach((d) => {
+    const tier = districtTier(d, sorted);
+    const r = 5 + 14 * Math.sqrt(d.total / maxTotal); // area-proportional radius, px
+    const pulseHtml = top5.has(d.d) ? '<div class="ping"></div>' : "";
+    const icon = Leaflet.divIcon({
+      className: "hs-pulse-wrap",
+      html: `${pulseHtml}<div class="hs-dot ${tier}" style="width:${r * 2}px;height:${r * 2}px;margin:${-r}px 0 0 ${-r}px"></div>`,
+      iconSize: [0, 0],
+    });
+    const marker = Leaflet.marker([d.lat, d.lng], { icon }).addTo(hsMap);
+    marker.on("click", () => selectDistrict(d.d));
+    hsMarkers[d.d] = marker;
+  });
+}
+
+async function selectDistrict(name) {
+  const d = DATA.districts.find((x) => x.d === name);
+  if (!d) return;
+  hsSelected = name;
+  Object.entries(hsMarkers).forEach(([n, m]) => {
+    const el = m.getElement && m.getElement();
+    if (el) el.querySelector(".hs-dot")?.classList.toggle("selected", n === name);
+  });
+
+  const R = ROLES[state.role];
+  const wrap = $("#hsDrill");
+  const statsHtml = `
+    <div class="hs-district-name">${esc(d.d)}</div>
+    <div class="hs-stats">
+      <span class="lab">IPC</span><span class="val">${d.ipc.toLocaleString()}</span>
+      <span class="lab">SLL</span><span class="val">${d.sll.toLocaleString()}</span>
+      <span class="lab">${L("Total", "ಒಟ್ಟು")}</span><span class="val">${d.total.toLocaleString()}</span>
+    </div>`;
+
+  // Policymaker: state aggregates only, ever — never a case list, no network call.
+  if (R.aggregatesOnly) {
+    wrap.innerHTML = statsHtml + `<div class="hs-note">${t("hs_aggregate_only")}</div>`;
+    return;
+  }
+  // Supervisor: full detail for their own district only — anything else is a real denial,
+  // decided client-side from their known scope (the backend has no per-click district input;
+  // it always returns the supervisor's own district, so a mismatch here IS the correct answer).
+  if (state.role === "supervisor" && d.d !== R.district) {
+    wrap.innerHTML = statsHtml + `<div class="hs-note denied">${t("hs_denied")}</div>`;
+    return;
+  }
+
+  wrap.innerHTML = statsHtml + `<div class="hs-note">${L("Loading cases…", "ಪ್ರಕರಣಗಳು ಲೋಡ್ ಆಗುತ್ತಿವೆ…")}</div>`;
+  let cases = [];
+  let note = "";
+  if (state.role === "investigator") note = t("hs_investigator_note");
+  try {
+    const res = await fetch(API_URL, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ resource: "cases", actor_email: R.email }),
+    });
+    let j = await res.json();
+    if (j && typeof j.output === "string") j = JSON.parse(j.output);
+    if (j && j.status === "success") {
+      cases = (j.data || []).filter((c) => state.role === "investigator" || c.district_name === name);
+    } else if (j && j.reason) {
+      note = j.reason;
+    }
+  } catch (_) { note = L("Backend unreachable — no live case data.", "ಬ್ಯಾಕ್‌ಎಂಡ್ ತಲುಪಲಾಗಲಿಲ್ಲ."); }
+
+  const rows = cases.slice(0, 20).map((c) => `
+    <div class="hs-case">
+      <div class="fir">${esc(c.fir_number || c.case_id)}</div>
+      <div>${esc(c.crime_type || "")} · ${esc(c.status || "")}</div>
+    </div>`).join("");
+  wrap.innerHTML = statsHtml
+    + (cases.length ? `<div class="hs-cases-list">${rows}</div>` : `<div class="hs-note">${L("No cases on file for this district.", "ಈ ಜಿಲ್ಲೆಗೆ ಯಾವುದೇ ಪ್ರಕರಣ ದಾಖಲೆ ಇಲ್ಲ.")}</div>`)
+    + (note ? `<div class="hs-note">${esc(note)}</div>` : "");
+}
+
 /* ============================ criminal network ============================ */
 const NET_KIND = {
   accused:  { cls: "n-accused",  lab: () => L("Accused", "ಆರೋಪಿ") },
@@ -728,6 +877,8 @@ function applyRole() {
 function switchView(v) {
   $$(".view").forEach((s) => s.classList.toggle("active", s.id === "view-" + v));
   $$(".nav").forEach((n) => n.setAttribute("aria-current", String(n.dataset.view === v)));
+  // Leaflet needs a visible, sized container — init lazily on first visit, else fix stale sizing.
+  if (v === "hotspots") setTimeout(initHotspotMap, 0);
 }
 
 function initTheme() {
