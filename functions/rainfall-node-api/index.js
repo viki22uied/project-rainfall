@@ -148,13 +148,16 @@ module.exports = async (context, basicIO) => {
   }
 };
 
-// Aggregate counts for the console header — cheap full scans (tables are small).
+// Aggregate counts for the console header. ZCQL caps LIMIT at 300, so use COUNT() for the
+// totals (correct past 300 rows) and a capped scan only for the per-status breakdown.
 async function computeStats(zcql) {
-  const cases = await zcql.executeZCQLQuery('SELECT status FROM Cases LIMIT 300');
-  const persons = await zcql.executeZCQLQuery('SELECT ROWID FROM Persons LIMIT 300');
-  const total = cases.length;
-  const unsolved = cases.filter(r => (r.Cases.status || '').toLowerCase() === 'unsolved').length;
-  return { cases: total, unsolved, persons: persons.length };
+  const [totalRow, unsolvedRow, personsRow] = await Promise.all([
+    zcql.executeZCQLQuery('SELECT COUNT(ROWID) FROM Cases'),
+    zcql.executeZCQLQuery("SELECT COUNT(ROWID) FROM Cases WHERE status = 'Unsolved'"),
+    zcql.executeZCQLQuery('SELECT COUNT(ROWID) FROM Persons'),
+  ]);
+  const val = (rows, table) => Number(rows[0] && rows[0][table] && Object.values(rows[0][table])[0]) || 0;
+  return { cases: val(totalRow, 'Cases'), unsolved: val(unsolvedRow, 'Cases'), persons: val(personsRow, 'Persons') };
 }
 
 // Append a hash-chained row to AuditLog (fetch last row for prev_hash, then insert).
