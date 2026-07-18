@@ -131,6 +131,7 @@ const DATA = {
 const I18N = {
   en: {
     brand_sub: "KSP Crime Intelligence", classif: "Restricted · Official Use", voice: "Speak",
+    demo_banner: "Hackathon demo · role switch unauthenticated",
     nav_head: "Workspace", nav_console: "Query Console", nav_er: "Entity Resolution",
     nav_mo: "Serial Patterns", nav_network: "Network", nav_hotspots: "Hotspots", nav_evidence: "Evidence Chain", signed_in: "Signed in", send: "Send",
     export_btn: "Export PDF", ask_ph: "Ask about a case, person, hotspot, or pattern…",
@@ -146,6 +147,7 @@ const I18N = {
   },
   kn: {
     brand_sub: "ಕೆಎಸ್‌ಪಿ ಅಪರಾಧ ಗುಪ್ತಚರ", classif: "ನಿರ್ಬಂಧಿತ · ಅಧಿಕೃತ ಬಳಕೆ", voice: "ಮಾತನಾಡಿ",
+    demo_banner: "ಹ್ಯಾಕಥಾನ್ ಡೆಮೊ · ಪಾತ್ರ ಬದಲಾವಣೆ ದೃಢೀಕರಿಸದ",
     nav_head: "ಕಾರ್ಯಕ್ಷೇತ್ರ", nav_console: "ಪ್ರಶ್ನೆ ಫಲಕ", nav_er: "ವ್ಯಕ್ತಿ ಗುರುತಿಸುವಿಕೆ",
     nav_mo: "ಸರಣಿ ಮಾದರಿಗಳು", nav_network: "ಜಾಲ", nav_hotspots: "ಹಾಟ್‌ಸ್ಪಾಟ್‌ಗಳು", nav_evidence: "ಸಾಕ್ಷ್ಯ ಸರಪಳಿ", signed_in: "ಪ್ರವೇಶಿಸಿದವರು", send: "ಕಳುಹಿಸಿ",
     export_btn: "ಪಿಡಿಎಫ್ ರಫ್ತು", ask_ph: "ಪ್ರಕರಣ, ವ್ಯಕ್ತಿ, ಹಾಟ್‌ಸ್ಪಾಟ್ ಅಥವಾ ಮಾದರಿ ಬಗ್ಗೆ ಕೇಳಿ…",

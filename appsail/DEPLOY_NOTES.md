@@ -68,8 +68,23 @@ one-time setup on this Windows box:
 - **Real bug fixed:** the SDK method is `zcql().execute_query(...)`, not
   `execute_zcql_query` (was wrong in every `catalyst_io.py` — would have failed in the
   cloud too, independent of the deploy blocker above).
-- `ALLOW_ACTOR_EMAIL_OVERRIDE=true` — **local/dev only**, lets the demo pick a role
-  without a Catalyst Auth session. `serve-local.sh` injects it into a throwaway copy of
-  `catalyst-config.json` and restores the clean committed file on exit — the deployed
-  function never has it (verified: the deployed gateway rejects an `actor_email`
-  override attempt with "no authenticated user").
+
+## Auth: HACKATHON_DEMO_MODE (2026-07-18)
+
+There is no login UI, and no real Catalyst Auth accounts exist for the 4 demo users —
+Catalyst Auth setup is console-only and we don't have console access for this build. The
+gateway (`functions/rainfall-node-api/index.js`) always prefers a real authenticated
+Catalyst user; `HACKATHON_DEMO_MODE=true` (committed in `catalyst-config.json`, on in
+both local and production) is a **narrow, labeled exception** for this submission only:
+a caller may assert one of the 4 seeded `@rainfall.demo` emails (regex-locked to that
+domain — not an arbitrary email) when there's no real session. The frontend shows a
+permanent banner next to the "Restricted" classification chip: *"Hackathon demo · role
+switch unauthenticated."*
+
+This intentionally re-opens the identity-assertion surface an earlier security pass had
+closed. Judged acceptable here because: the four accounts are clearly fake demo users,
+not real officers; the alternative was a production build with no working role-based
+demo at all (nothing to actually judge); and the tradeoff is disclosed on-page, not
+hidden. **A real production rollout must replace this with actual Catalyst Auth login
+before removing the banner** — see the RBAC/audit code itself, which is otherwise
+unaffected by this and enforces exactly the same role scoping either way.

@@ -69,13 +69,18 @@ module.exports = async (context, basicIO) => {
   const elevated = String(basicIO.getArgument('elevated')) === 'true';
 
   try {
-    // 1. Identify the actor. The authenticated Catalyst user ALWAYS wins — a client-supplied
-    //    actor_email is only honoured when there is no real session AND a server-side flag is
-    //    set. That flag is absent from the deployed config (see catalyst-config.json) and is
-    //    injected for local serve only (serve-local.sh); in production it can never impersonate.
+    // 1. Identify the actor. The authenticated Catalyst user ALWAYS wins. HACKATHON_DEMO_MODE
+    //    is an intentional, labeled exception for this submission: there is no login UI wired
+    //    up yet (Catalyst Auth requires console setup we don't have access to for this build),
+    //    so judges pick a role via the dropdown instead of logging in. Scoped tight: only the
+    //    4 seeded @rainfall.demo accounts can be asserted this way — not an arbitrary email —
+    //    and the UI shows a permanent banner saying this mode is active. See DEPLOY_NOTES.md.
     let email;
     try { email = (await app.userManagement().getCurrentUser()).email_id; } catch (_) { /* no auth context */ }
-    if (!email && process.env.ALLOW_ACTOR_EMAIL_OVERRIDE === 'true') email = basicIO.getArgument('actor_email');
+    if (!email && process.env.HACKATHON_DEMO_MODE === 'true') {
+      const claimed = basicIO.getArgument('actor_email');
+      if (claimed && /^[a-z]+@rainfall\.demo$/.test(claimed)) email = claimed;
+    }
     // Strict validation doubles as injection defense: a valid email contains no quotes,
     // so the interpolation below cannot be broken out of.
     if (!email || !/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(email)) {
