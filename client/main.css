@@ -164,10 +164,12 @@ select.control { padding-right: 8px; }
 /* stat strip */
 .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--gap); margin-bottom: 22px; }
 .tile { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 14px 15px;
-  box-shadow: var(--shadow); position: relative; overflow: hidden; }
+  box-shadow: var(--shadow); position: relative; overflow: hidden;
+  font: inherit; text-align: left; cursor: pointer; width: 100%; color: inherit; }
 .tile::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--accent); opacity: .7; }
 .tile.alert::before { background: var(--alert); }
 .tile.ok::before { background: var(--ok); }
+.tile:hover, .tile:focus-visible { border-color: var(--line-strong); box-shadow: var(--shadow), 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent); }
 .tile .k { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-3); }
 .tile .v { font-family: var(--serif); font-size: 30px; line-height: 1.1; margin-top: 4px; font-variant-numeric: tabular-nums; }
 .tile .d { font-size: 12px; color: var(--text-2); margin-top: 2px; }
@@ -295,6 +297,8 @@ select.control { padding-right: 8px; }
 .seal-stage { display: grid; grid-template-columns: 260px 1fr; gap: var(--gap); align-items: start; }
 .stamp-well { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--shadow);
   padding: 24px; display: grid; place-items: center; gap: 16px; text-align: center; }
+.stamp-well .field-label { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); margin-bottom: -10px; }
+.finding-select { width: 100%; max-width: 100%; }
 .stamp { width: 150px; height: 150px; position: relative; }
 .stamp .ring { position: absolute; inset: 0; border-radius: 50%; border: 3px solid var(--olive); color: var(--olive);
   display: grid; place-items: center; transition: transform .5s cubic-bezier(.2,.7,.3,1), color .5s, border-color .5s; }
@@ -360,11 +364,13 @@ select.control { padding-right: 8px; }
 .netlegend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
 .netgraph { width: 100%; height: 460px; display: block; background:
   radial-gradient(circle at 1px 1px, var(--line) 1px, transparent 0) 0 0 / 14px 14px; border: 1px solid var(--line); border-radius: var(--r); }
-.netedge { stroke: var(--olive); stroke-width: .5; opacity: .55; }
+.netedge { stroke: var(--olive); stroke-width: .5; opacity: .55; transition: opacity .2s, stroke-width .2s; }
 .netedge.weak { stroke-dasharray: 1.4 1.4; opacity: .8; stroke: var(--rust); }
+.netedge.hi { stroke: var(--accent); stroke-width: 1; opacity: 1; }
 .netnode { animation: netsettle .5s cubic-bezier(.2,.7,.3,1) both; }
 .netnode text { font: 2.6px var(--sans); fill: var(--text-2); paint-order: stroke; stroke: var(--panel); stroke-width: .7px; }
-.netnode circle { stroke: var(--panel); stroke-width: .6; cursor: default; }
+.netnode circle { stroke: var(--panel); stroke-width: .6; cursor: pointer; transition: stroke .15s, stroke-width .15s; }
+.netnode:hover circle, .netnode.selected circle { stroke: var(--accent); stroke-width: 1.4; }
 .n-accused i, .n-accused circle { background: var(--rust); fill: var(--rust); }
 .n-victim i,  .n-victim circle  { background: var(--amber); fill: var(--amber); }
 .n-witness i, .n-witness circle { background: var(--text-3); fill: var(--text-3); }

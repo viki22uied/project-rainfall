@@ -6,10 +6,10 @@
 /* ============================ sample data (from the real CSVs) ============================ */
 const DATA = {
   stats: [
-    { k: "cases", v: 135, d: "across 18 stations" },
-    { k: "unsolved", v: 58, d: "43% open", cls: "alert" },
-    { k: "serial patterns", v: 3, d: "cross-jurisdiction", cls: "alert" },
-    { k: "resolved identities", v: 21, d: "confidence ≥ 95", cls: "ok" },
+    { k: "cases", v: 135, d: "across 18 stations", view: "hotspots" },
+    { k: "unsolved", v: 58, d: "43% open", cls: "alert", view: "mo" },
+    { k: "serial patterns", v: 3, d: "cross-jurisdiction", cls: "alert", view: "mo" },
+    { k: "resolved identities", v: 21, d: "confidence ≥ 95", cls: "ok", view: "er" },
   ],
   // person records with recorded-name variants (persons_synthetic.csv)
   persons: {
@@ -143,7 +143,7 @@ const I18N = {
     er_pending: "Candidate matches — pending review",
     mo_h: "Serial-Pattern Analysis", mo_p: "Unsolved cases linked by modus operandi — no named suspect required. Cross-jurisdiction spread is the signal, not a coincidence.",
     ev_h: "Court-Admissible Evidence Chain", ev_p: "Every AI finding is hash-stamped at the moment it is generated and issued as a Bharatiya Sakshya Adhiniyam 2023, Section 63 electronic-evidence certificate — the standard Indian courts now require.",
-    seal_btn: "Seal finding", seal_hint: "Press to hash-stamp the selected finding.",
+    seal_btn: "Seal finding", seal_hint: "Press to hash-stamp the selected finding.", ev_pick: "Finding to seal",
   },
   kn: {
     brand_sub: "ಕೆಎಸ್‌ಪಿ ಅಪರಾಧ ಗುಪ್ತಚರ", classif: "ನಿರ್ಬಂಧಿತ · ಅಧಿಕೃತ ಬಳಕೆ", voice: "ಮಾತನಾಡಿ",
@@ -159,7 +159,7 @@ const I18N = {
     er_pending: "ಸಂಭಾವ್ಯ ಹೊಂದಾಣಿಕೆಗಳು — ಪರಿಶೀಲನೆ ಬಾಕಿ",
     mo_h: "ಸರಣಿ ಮಾದರಿ ವಿಶ್ಲೇಷಣೆ", mo_p: "ಕಾರ್ಯವಿಧಾನದಿಂದ ಸಂಪರ್ಕಿಸಲಾದ ಬಗೆಹರಿಯದ ಪ್ರಕರಣಗಳು — ಶಂಕಿತನ ಹೆಸರು ಅಗತ್ಯವಿಲ್ಲ. ಗಡಿ-ದಾಟುವ ಹರಡುವಿಕೆಯೇ ಸೂಚನೆ.",
     ev_h: "ನ್ಯಾಯಾಲಯ-ಸ್ವೀಕಾರಾರ್ಹ ಸಾಕ್ಷ್ಯ ಸರಪಳಿ", ev_p: "ಪ್ರತಿ ಎಐ ಸಂಶೋಧನೆಯನ್ನು ಉತ್ಪಾದನೆಯ ಕ್ಷಣದಲ್ಲೇ ಹ್ಯಾಶ್-ಮುದ್ರೆ ಹಾಕಲಾಗುತ್ತದೆ ಮತ್ತು ಭಾರತೀಯ ಸಾಕ್ಷ್ಯ ಅಧಿನಿಯಮ 2023, ಸೆಕ್ಷನ್ 63 ಪ್ರಮಾಣಪತ್ರ ನೀಡಲಾಗುತ್ತದೆ.",
-    seal_btn: "ಸಂಶೋಧನೆ ಮುದ್ರಿಸಿ", seal_hint: "ಆಯ್ದ ಸಂಶೋಧನೆಗೆ ಹ್ಯಾಶ್-ಮುದ್ರೆ ಹಾಕಲು ಒತ್ತಿರಿ.",
+    seal_btn: "ಸಂಶೋಧನೆ ಮುದ್ರಿಸಿ", seal_hint: "ಆಯ್ದ ಸಂಶೋಧನೆಗೆ ಹ್ಯಾಶ್-ಮುದ್ರೆ ಹಾಕಲು ಒತ್ತಿರಿ.", ev_pick: "ಮುದ್ರಿಸಬೇಕಾದ ಸಂಶೋಧನೆ",
   },
 };
 
@@ -244,6 +244,9 @@ async function loadLive() {
   renderStats(); renderMatches(); renderPatterns(); renderNetwork();
   $("#erBadge").textContent = DATA.matches.length;
   renderLiveBadge();
+  // Don't clobber a seal in progress — only refresh the candidate list with live data
+  // while nothing's been sealed yet.
+  if (!$("#stamp").classList.contains("sealed")) populateFindingSelect();
 }
 
 function renderLiveBadge() {
@@ -283,12 +286,16 @@ function applyLang() {
 
 /* ============================ stats ============================ */
 function renderStats() {
-  $("#stats").innerHTML = DATA.stats.map((s) => `
-    <div class="tile ${s.cls || ""}">
+  $("#stats").innerHTML = DATA.stats.map((s, i) => `
+    <button class="tile ${s.cls || ""}" data-i="${i}" type="button">
       <div class="k">${esc(s.k)}</div>
       <div class="v num">${s.v}</div>
       <div class="d">${esc(s.d)}</div>
-    </div>`).join("");
+    </button>`).join("");
+  $$("#stats .tile").forEach((tile) => tile.addEventListener("click", () => {
+    const s = DATA.stats[+tile.dataset.i];
+    if (s.view) switchView(s.view);
+  }));
 }
 
 /* ============================ query console ============================ */
@@ -785,18 +792,37 @@ function renderNetwork() {
   const isPII = (n) => n.kind === "accused" || n.kind === "victim";
   const lines = edges.map((e) => {
     const a = pos[e.a], b = pos[e.b];
-    return `<line class="netedge${e.weak ? " weak" : ""}" x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}"><title>${esc(e.rel)}</title></line>`;
+    if (!a || !b) return "";
+    return `<line class="netedge${e.weak ? " weak" : ""}" data-a="${esc(e.a)}" data-b="${esc(e.b)}" x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}"><title>${esc(e.rel)}</title></line>`;
   }).join("");
   const dots = nodes.map((n, i) => {
     const label = mask && isPII(n) ? "•••" : n.label;
     const r = n.kind === "cluster" ? 3.6 : n.kind === "case" ? 2.6 : 3;
-    return `<g class="netnode ${NET_KIND[n.kind].cls}" style="animation-delay:${(i * 0.05).toFixed(2)}s">
-      <circle cx="${n.x}" cy="${n.y}" r="${r}"><title>${esc(n.id)} · ${esc(NET_KIND[n.kind].lab())}</title></circle>
+    return `<g class="netnode ${NET_KIND[n.kind].cls}" data-id="${esc(n.id)}" data-kind="${esc(n.kind)}" style="animation-delay:${(i * 0.05).toFixed(2)}s">
+      <circle cx="${n.x}" cy="${n.y}" r="${r}"><title>${esc(n.id)} · ${esc(NET_KIND[n.kind].lab())} — click to inspect</title></circle>
       <text x="${n.x}" y="${n.y - r - 1.4}" text-anchor="middle">${esc(label)}</text></g>`;
   }).join("");
   $("#netgraph").innerHTML = lines + dots;
   $("#netlegend").innerHTML = Object.values(NET_KIND).map((k) =>
     `<span class="lk"><i class="${k.cls}"></i>${esc(k.lab())}</span>`).join("");
+
+  // Click a node: highlight its edges, and for cases/clusters jump straight to the detail
+  // view a judge would actually want — people just get a role-respecting toast (no dead click).
+  $$("#netgraph .netnode").forEach((g) => g.addEventListener("click", () => {
+    const id = g.dataset.id, kind = g.dataset.kind;
+    $$("#netgraph .netnode").forEach((n) => n.classList.toggle("selected", n.dataset.id === id));
+    $$("#netgraph .netedge").forEach((e) => e.classList.toggle("hi", e.dataset.a === id || e.dataset.b === id));
+    if (kind === "case") {
+      switchView("console");
+      $("#q").value = `Case summary for ${id}`;
+      ask();
+    } else if (kind === "cluster") {
+      switchView("mo");
+    } else {
+      const label = mask && isPII({ kind }) ? L("masked for this role", "ಈ ಪಾತ್ರಕ್ಕೆ ಮರೆಮಾಡಲಾಗಿದೆ") : id;
+      toast(`${NET_KIND[kind].lab()} · ${label}`);
+    }
+  }));
 }
 
 /* ============================ PDF export (Req 4) ============================ */
@@ -846,20 +872,61 @@ function exportPDF() {
 }
 
 /* ============================ evidence chain ============================ */
-const FINDING = {
-  artifact_type: "cluster", id: "SERIAL-1",
-  inputs: { cases: ["C-5001", "C-5002", "C-5003", "C-5004", "C-5005", "C-5006"], features: ["entry_method", "weapon", "target_type", "time_band"] },
-  output: { serial: "SERIAL-1", size: 6, districts: 6, cohesion: 100 },
-};
+// The finding to seal used to be hardcoded to one cluster. Build the real candidate list
+// from whatever's actually on screen (MO clusters + ER matches) so a judge can pick any
+// finding and see the same hash-stamp flow apply to it.
+let FINDING = null;
 let sealedHash = null;
+
+function buildFindings() {
+  const clusters = DATA.clusters.map((c) => ({
+    id: c.id, artifact_type: "cluster",
+    label: `Serial-pattern finding ${c.id} — ${c.cases.length} cases, ${c.districts.length} districts`,
+    desc: `Serial-pattern finding <b>${esc(c.id)}</b> — ${c.cases.length} linked cases across ${c.districts.length} districts (cohesion ${c.score}%).`,
+    inputs: { cases: c.cases, features: Object.keys(c.sig) },
+    output: { serial: c.id, size: c.cases.length, districts: c.districts.length, cohesion: c.score },
+  }));
+  const matches = DATA.matches.map((m) => ({
+    id: m.id, artifact_type: "er_match",
+    label: `Entity-resolution match ${m.id} — confidence ${m.conf}`,
+    desc: `Entity-resolution match <b>${esc(m.id)}</b> — ${esc(m.a.name)} ≟ ${esc(m.b.name)} (confidence ${m.conf}).`,
+    inputs: { person_a: m.person_a, person_b: m.person_b, method: m.method || "composite" },
+    output: { match_id: m.id, confidence: m.conf },
+  }));
+  return [...clusters, ...matches];
+}
+
+function populateFindingSelect() {
+  const findings = buildFindings();
+  if (!findings.length) return;
+  const sel = $("#findingSelect");
+  const keep = sel.value; // preserve selection across re-renders where possible
+  sel.innerHTML = findings.map((f) => `<option value="${esc(f.id)}">${esc(f.label)}</option>`).join("");
+  const match = findings.find((f) => f.id === keep) || findings[0];
+  sel.value = match.id;
+  selectFinding(match.id, findings);
+}
+
+function selectFinding(id, findings) {
+  const list = findings || buildFindings();
+  FINDING = list.find((f) => f.id === id) || list[0];
+  sealedHash = null;
+  const stamp = $("#stamp");
+  stamp.classList.remove("sealed", "pressing");
+  $("#stampTxt").textContent = "UNSEALED";
+  $("#sealBtn").disabled = false;
+  $("#sealHint").textContent = t("seal_hint");
+  renderCert(null, false);
+}
 
 function renderCert(hash, sealed) {
   const now = new Date().toISOString().replace("T", " ").slice(0, 19) + " UTC";
+  const f = FINDING || { desc: "—" };
   $("#cert").className = "cert" + (sealed ? "" : " locked");
   $("#cert").innerHTML = `
     <div class="ct"><div class="eyebrow">Bharatiya Sakshya Adhiniyam, 2023</div><h3>Certificate under Section 63</h3></div>
     <div class="cbody">
-      <div class="row"><span class="lab">Electronic record</span><div>Serial-pattern finding <b>SERIAL-1</b> — 6 linked cases across 6 districts (cohesion 100%).</div></div>
+      <div class="row"><span class="lab">Electronic record</span><div>${f.desc}</div></div>
       <div class="row"><span class="lab">Output hash (SHA-256)</span><div class="mono" style="word-break:break-all">${esc(hash || "— pending seal —")}</div></div>
       <div class="row"><span class="lab">Manner of production</span><div>Produced by the Project-Rainfall automated system from the stated inputs in the ordinary course of operation; integrity secured by SHA-256 at time of generation.</div></div>
       <div class="row"><span class="lab">Generated at</span><div class="mono">${sealed ? esc(now) : "—"}</div></div>
@@ -1002,10 +1069,11 @@ function initTheme() {
 
 /* ============================ boot ============================ */
 function boot() {
-  renderStats(); renderMatches(); renderPatterns(); renderNetwork(); renderCert(null, false); applyLang(); applyRole();
+  renderStats(); renderMatches(); renderPatterns(); renderNetwork(); populateFindingSelect(); applyLang(); applyRole();
   $("#erBadge").textContent = DATA.matches.length;
   loadLive(); // replace sample with live AppSail ML output where the backend is reachable
 
+  $("#findingSelect").addEventListener("change", (e) => selectFinding(e.target.value));
   $$(".nav").forEach((n) => n.addEventListener("click", () => switchView(n.dataset.view)));
   $("#role").addEventListener("change", (e) => { state.role = e.target.value; applyRole(); renderNetwork(); loadLive(); });
   $$(".seg [data-lang]").forEach((b) => b.addEventListener("click", () => {
