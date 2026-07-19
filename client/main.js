@@ -188,17 +188,30 @@ async function api(action, extra = {}) {
   return j;
 }
 
-async function loadLive() {
-  try {
-    const s = await api("stats");
-    DATA.stats[0].v = s.stats.cases; DATA.stats[0].d = `${s.stats.persons} persons on file`;
-    DATA.stats[1].v = s.stats.unsolved;
-    DATA.stats[1].d = `${Math.round(100 * s.stats.unsolved / s.stats.cases)}% open`;
-    state.live = true;
-  } catch (_) { state.live = false; }
+// stats/mo_clusters are role-invariant (same data regardless of who's asking) — fetch
+// once and reuse across role switches instead of re-hitting AppSail every time, which is
+// what made switching roles feel slow (4 sequential round trips, 2 of them redundant).
+let _loadedInvariants = false;
 
-  try {
-    const { data } = await api("mo_clusters");
+async function loadLive() {
+  const keys = ["network", "er"];
+  const calls = [api("network"), api("er_candidates")];
+  if (!_loadedInvariants) { keys.push("stats", "mo"); calls.push(api("stats"), api("mo_clusters")); }
+  const results = await Promise.allSettled(calls);
+  const by = Object.fromEntries(keys.map((k, i) => [k, results[i]]));
+  const { network, er, stats, mo } = by;
+
+  if (stats && stats.status === "fulfilled") {
+    const s = stats.value.stats;
+    DATA.stats[0].v = s.cases; DATA.stats[0].d = `${s.persons} persons on file`;
+    DATA.stats[1].v = s.unsolved;
+    DATA.stats[1].d = `${Math.round(100 * s.unsolved / s.cases)}% open`;
+    state.live = true;
+    _loadedInvariants = true;
+  } else if (stats) { state.live = false; }
+
+  if (mo && mo.status === "fulfilled") {
+    const data = mo.value.data;
     if (data.patterns && data.patterns.length) {
       DATA.clusters = data.patterns.map((p, i) => ({
         id: `SERIAL-${i + 1}`, crime: p.crime_type || "Serial pattern",
@@ -208,10 +221,10 @@ async function loadLive() {
       }));
       DATA.stats[2].v = data.patterns.length;
     }
-  } catch (_) { /* keep sample clusters */ }
+  }
 
-  try {
-    const { data } = await api("er_candidates");
+  if (er.status === "fulfilled") {
+    const data = er.value.data;
     if (data.candidates && data.candidates.length) {
       DATA.matches = data.candidates.map((m, i) => ({
         id: `M${i + 1}`, person_a: m.person_a, person_b: m.person_b, method: m.method,
@@ -222,12 +235,11 @@ async function loadLive() {
               m.confidence >= 90 ? "Above review threshold" : "Below auto-confirm — needs review"],
       }));
     }
-  } catch (e) { if (e.denied) DATA.matches = []; /* role denied → show none; offline → keep sample */ }
+  } else if (er.reason && er.reason.denied) DATA.matches = []; // role denied → show none; offline → keep sample
 
-  try {
-    const { network } = await api("network");
-    DATA.network = layoutNetwork(network.nodes, network.edges);
-  } catch (e) { if (e.denied) DATA.network = { nodes: [], edges: [] }; /* policymaker → empty; offline → keep sample */ }
+  if (network.status === "fulfilled") {
+    DATA.network = layoutNetwork(network.value.network.nodes, network.value.network.edges);
+  } else if (network.reason && network.reason.denied) DATA.network = { nodes: [], edges: [] }; // policymaker → empty; offline → keep sample
 
   renderStats(); renderMatches(); renderPatterns(); renderNetwork();
   $("#erBadge").textContent = DATA.matches.length;
