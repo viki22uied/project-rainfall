@@ -863,8 +863,8 @@ async function toggleVoice() {
     if (!blob.size) { toast(L("Didn't catch anything — speak clearly and try again.", "ಏನೂ ಕೇಳಿಸಲಿಲ್ಲ — ಸ್ಪಷ್ಟವಾಗಿ ಮಾತನಾಡಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.")); return; }
     toast(L("Transcribing…", "ಪಠ್ಯಕ್ಕೆ ಪರಿವರ್ತಿಸಲಾಗುತ್ತಿದೆ…"));
     try {
-      const { data } = await api("transcribe", { audio: await blobToBase64(blob), lang: state.lang });
-      const text = (data.text || "").trim();
+      const res = await api("transcribe", { audio: await blobToBase64(blob), lang: state.lang });
+      const text = (res.text || "").trim();
       if (!text) { toast(L("Didn't catch anything — speak clearly and try again.", "ಏನೂ ಕೇಳಿಸಲಿಲ್ಲ — ಸ್ಪಷ್ಟವಾಗಿ ಮಾತನಾಡಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.")); return; }
       $("#q").value = text;
       ask();
