@@ -831,11 +831,15 @@ const MAX_RECORD_MS = 15000;
 let mediaRecorder = null;
 let recordTimer = null;
 
-async function blobToBase64(blob) {
-  const buf = new Uint8Array(await blob.arrayBuffer());
-  let binary = "";
-  for (let i = 0; i < buf.length; i += 0x8000) binary += String.fromCharCode(...buf.subarray(i, i + 0x8000));
-  return btoa(binary);
+function blobToBase64(blob) {
+  // FileReader's data-URL encoding is the standard, size-safe way to do this — no manual
+  // chunking, no risk of blowing an argument-count limit on a real (larger) recording.
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.slice(reader.result.indexOf(",") + 1));
+    reader.onerror = () => reject(reader.error || new Error("could not read recording"));
+    reader.readAsDataURL(blob);
+  });
 }
 
 async function toggleVoice() {
