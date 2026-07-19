@@ -3,6 +3,10 @@
 catalyst-debug.log
 **/node_modules/
 
+# Local-only secrets (Groq API key etc.) — never committed. See serve-local.sh.
+.env.local
+functions/rainfall-node-api/catalyst-config.json.bak
+
 # Python
 __pycache__/
 *.pyc

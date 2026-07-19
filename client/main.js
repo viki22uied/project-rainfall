@@ -812,50 +812,66 @@ async function sealFinding() {
   }, 520);
 }
 
-/* ============================ voice (Web Speech) ============================ */
-const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-let recog = null;
+/* ============================ voice ============================ */
+// Output (speak-back) stays on the browser's built-in speechSynthesis — purely local, no
+// network call, nothing to route through our infra.
 function speak(text) {
   if (!window.speechSynthesis) return;
   const u = new SpeechSynthesisUtterance(text);
   u.lang = state.lang === "kn" ? "kn-IN" : "en-IN";
   speechSynthesis.cancel(); speechSynthesis.speak(u);
 }
-const VOICE_ERR = {
-  "not-allowed": L => L("Microphone blocked — allow mic access for this site, then click Speak again.", "ಮೈಕ್ ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ — ಈ ಸೈಟ್‌ಗೆ ಮೈಕ್ ಅನುಮತಿಸಿ, ನಂತರ ಮತ್ತೆ ಮಾತನಾಡಿ ಒತ್ತಿ."),
-  "service-not-allowed": L => L("Speech service unavailable — open the page over http://localhost, not a file:// path.", "ಭಾಷಣ ಸೇವೆ ಲಭ್ಯವಿಲ್ಲ — ಪುಟವನ್ನು file:// ಬದಲು http://localhost ಮೂಲಕ ತೆರೆಯಿರಿ."),
-  "network": L => L("Speech recognition needs an internet connection.", "ಭಾಷಣ ಗುರುತಿಸುವಿಕೆಗೆ ಇಂಟರ್ನೆಟ್ ಸಂಪರ್ಕ ಬೇಕು."),
-  "no-speech": L => L("Didn't catch that — try speaking again.", "ಕೇಳಿಸಲಿಲ್ಲ — ಮತ್ತೆ ಮಾತನಾಡಲು ಪ್ರಯತ್ನಿಸಿ."),
-};
-function toggleVoice() {
+
+// Input: record the mic and transcribe server-side via our gateway's `transcribe` action
+// (Groq Whisper) instead of the browser's built-in speech recognition — keeps voice input
+// on our own infrastructure end to end, and works in any browser that has a microphone,
+// not just Chrome/Edge. The transcribed text is dropped straight into the query box and
+// submitted, same as before: speak, and it's asked for you.
+const MAX_RECORD_MS = 15000;
+let mediaRecorder = null;
+let recordTimer = null;
+
+async function blobToBase64(blob) {
+  const buf = new Uint8Array(await blob.arrayBuffer());
+  let binary = "";
+  for (let i = 0; i < buf.length; i += 0x8000) binary += String.fromCharCode(...buf.subarray(i, i + 0x8000));
+  return btoa(binary);
+}
+
+async function toggleVoice() {
   state._speak = true;
-  if (!SR) { toast(L("Voice input needs Chrome or Edge — output still works.", "ಧ್ವನಿ ಇನ್‌ಪುಟ್‌ಗೆ Chrome ಅಥವಾ Edge ಬೇಕು — ಔಟ್‌ಪುಟ್ ಇನ್ನೂ ಕೆಲಸ ಮಾಡುತ್ತದೆ.")); return; }
-  if (recog && recog._on) { recog.stop(); return; }
-  recog = new SR();
-  recog.lang = state.lang === "kn" ? "kn-IN" : "en-IN";
-  recog.interimResults = true;
-  recog._on = true;
+  if (mediaRecorder && mediaRecorder.state === "recording") { mediaRecorder.stop(); return; }
+  if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
+    toast(L("Voice input needs a browser with microphone support.", "ಧ್ವನಿ ಇನ್‌ಪುಟ್‌ಗೆ ಮೈಕ್ ಬೆಂಬಲವಿರುವ ಬ್ರೌಸರ್ ಬೇಕು.")); return;
+  }
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+  catch (_) { toast(L("Microphone blocked — allow mic access for this site, then click Speak again.", "ಮೈಕ್ ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ — ಈ ಸೈಟ್‌ಗೆ ಮೈಕ್ ಅನುಮತಿಸಿ, ನಂತರ ಮತ್ತೆ ಮಾತನಾಡಿ ಒತ್ತಿ.")); return; }
+
+  const chunks = [];
+  mediaRecorder = new MediaRecorder(stream);
+  mediaRecorder.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
+  mediaRecorder.onstop = async () => {
+    clearTimeout(recordTimer);
+    $("#voiceBtn").classList.remove("live");
+    stream.getTracks().forEach((tr) => tr.stop());
+    const blob = new Blob(chunks, { type: mediaRecorder.mimeType || "audio/webm" });
+    if (!blob.size) { toast(L("Didn't catch anything — speak clearly and try again.", "ಏನೂ ಕೇಳಿಸಲಿಲ್ಲ — ಸ್ಪಷ್ಟವಾಗಿ ಮಾತನಾಡಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.")); return; }
+    toast(L("Transcribing…", "ಪಠ್ಯಕ್ಕೆ ಪರಿವರ್ತಿಸಲಾಗುತ್ತಿದೆ…"));
+    try {
+      const { data } = await api("transcribe", { audio: await blobToBase64(blob), lang: state.lang });
+      const text = (data.text || "").trim();
+      if (!text) { toast(L("Didn't catch anything — speak clearly and try again.", "ಏನೂ ಕೇಳಿಸಲಿಲ್ಲ — ಸ್ಪಷ್ಟವಾಗಿ ಮಾತನಾಡಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.")); return; }
+      $("#q").value = text;
+      ask();
+    } catch (e) {
+      toast(e.denied ? `${L("Voice error", "ಧ್ವನಿ ದೋಷ")}: ${e.message}` : L("Couldn't transcribe — check your connection and try again.", "ಪರಿವರ್ತಿಸಲಾಗಲಿಲ್ಲ — ಸಂಪರ್ಕ ಪರಿಶೀಲಿಸಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ."));
+    }
+  };
+  mediaRecorder.start();
   $("#voiceBtn").classList.add("live");
-  recog._got = false;
-  recog.onstart = () => toast(L("Listening…", "ಆಲಿಸುತ್ತಿದೆ…"));
-  recog.onresult = (e) => {
-    const text = [...e.results].map((r) => r[0].transcript).join("");
-    $("#q").value = text;
-    if (text.trim()) recog._got = true;
-    // submit as soon as we have a final result, don't wait for the mic to time out
-    if ([...e.results].some((r) => r.isFinal) && text.trim()) { recog._done = true; recog.stop(); }
-  };
-  recog.onend = () => {
-    recog._on = false; $("#voiceBtn").classList.remove("live");
-    if ($("#q").value.trim()) ask();
-    else if (!recog._got) toast(L("Didn't catch anything — speak clearly and try again.", "ಏನೂ ಕೇಳಿಸಲಿಲ್ಲ — ಸ್ಪಷ್ಟವಾಗಿ ಮಾತನಾಡಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ."));
-  };
-  recog.onerror = (e) => {
-    recog._on = false; $("#voiceBtn").classList.remove("live");
-    const m = VOICE_ERR[e.error]; if (m) toast(m(L)); else toast(L("Voice error: ", "ಧ್ವನಿ ದೋಷ: ") + e.error);
-  };
-  try { recog.start(); }
-  catch (err) { recog._on = false; $("#voiceBtn").classList.remove("live"); toast(L("Couldn't start the mic — click Speak again.", "ಮೈಕ್ ಪ್ರಾರಂಭಿಸಲಾಗಲಿಲ್ಲ — ಮತ್ತೆ ಮಾತನಾಡಿ ಒತ್ತಿ.")); }
+  toast(L("Listening… click again to stop.", "ಆಲಿಸುತ್ತಿದೆ… ನಿಲ್ಲಿಸಲು ಮತ್ತೆ ಕ್ಲಿಕ್ ಮಾಡಿ."));
+  recordTimer = setTimeout(() => { if (mediaRecorder.state === "recording") mediaRecorder.stop(); }, MAX_RECORD_MS);
 }
 
 /* ============================ role + nav + theme ============================ */

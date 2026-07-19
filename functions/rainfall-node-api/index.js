@@ -45,6 +45,26 @@ async function callAppsail(def, body) {
   return res.json();
 }
 
+// Voice input: browser records audio, we transcribe it server-side via Groq Whisper so the
+// API key never reaches the client. GROQ_API_KEY is set via the Catalyst console's function
+// environment variables (never committed — see appsail/DEPLOY_NOTES.md). Kept separate from
+// the AppSail ACTIONS map above since it's multipart, not JSON, and hits an external API.
+async function transcribeAudio(base64Audio, lang) {
+  if (!process.env.GROQ_API_KEY) throw new Error('voice transcription is not configured');
+  const form = new FormData();
+  form.append('file', new Blob([Buffer.from(base64Audio, 'base64')]), 'query.webm');
+  form.append('model', 'whisper-large-v3-turbo');
+  if (lang === 'kn' || lang === 'en') form.append('language', lang);
+  const res = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+    body: form,
+  });
+  if (!res.ok) throw new Error(`groq transcription ${res.status}`);
+  const json = await res.json();
+  return (json.text || '').trim();
+}
+
 /**
  * RBAC + immutable-audit gateway. Every request is role-filtered BEFORE the DB read,
  * and every request (allowed, masked, or denied) is written to the hash-chained AuditLog.
@@ -99,6 +119,15 @@ module.exports = async (context, basicIO) => {
       const stats = await computeStats(zcql);
       await writeAudit(app, zcql, user, 'stats', { decision: 'allowed', reason: '', maskPII: false });
       return respond('success', { stats });
+    }
+    if (action === 'transcribe') {
+      const audio = basicIO.getArgument('audio'); // base64, no data: prefix
+      if (!audio) return respond('failure', { error: 'no audio provided' });
+      let text;
+      try { text = await transcribeAudio(audio, basicIO.getArgument('lang')); }
+      catch (err) { return respond('failure', { error: err.message || 'transcription failed' }); }
+      const seq = await writeAudit(app, zcql, user, 'transcribe', { decision: 'allowed', reason: '', maskPII: false });
+      return respond('success', { text, audit_seq: seq });
     }
     if (action && ACTIONS[action]) {
       const def = ACTIONS[action];
@@ -155,6 +184,7 @@ module.exports = async (context, basicIO) => {
     return respond('failure', { error: 'internal error' });
   }
 };
+module.exports.transcribeAudio = transcribeAudio; // exported for testing (mocked fetch)
 
 // Aggregate counts for the console header. ZCQL caps LIMIT at 300, so use COUNT() for the
 // totals (correct past 300 rows) and a capped scan only for the per-status breakdown.

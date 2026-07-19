@@ -88,3 +88,30 @@ demo at all (nothing to actually judge); and the tradeoff is disclosed on-page, 
 hidden. **A real production rollout must replace this with actual Catalyst Auth login
 before removing the banner** — see the RBAC/audit code itself, which is otherwise
 unaffected by this and enforces exactly the same role scoping either way.
+
+## Voice input: Groq Whisper via the gateway (2026-07-18)
+
+The mic button records audio in the browser and sends it to the gateway's `transcribe`
+action, which forwards it server-side to Groq's Whisper API (`whisper-large-v3-turbo`)
+and returns the transcribed text — which then goes straight into the query box and gets
+asked, same as before. This replaced the old browser-only Web Speech API path so voice
+input runs through our own infrastructure end to end and works in any browser with a
+microphone, not just Chrome/Edge.
+
+**`GROQ_API_KEY` is a real secret and is deliberately NOT in `catalyst-config.json`** —
+unlike the AppSail URLs or `HACKATHON_DEMO_MODE`, this one can't be committed to a public
+repo. Two places it needs to be set, neither of them a tracked file:
+- **Local**: put `GROQ_API_KEY=...` in a gitignored `.env.local` at the repo root.
+  `serve-local.sh` reads it and injects it into a throwaway copy of the deployed
+  function's config for that run only, restoring the clean committed file on exit (same
+  pattern the `HACKATHON_DEMO_MODE` flag used before it became permanent).
+- **Production**: set it via the Catalyst console — Functions → rainfall-node-api →
+  Configuration → Environment Variables — for the Development/Production environment
+  actually in use. This is a manual, one-time step; there's no CLI command for it
+  (`catalyst functions:config` only supports `--memory`), and console access isn't
+  available from this build environment, so whoever has console access needs to do it.
+  Until it's set, `/transcribe` fails cleanly with "voice transcription is not
+  configured" rather than crashing — the rest of the app is unaffected.
+
+Verified end-to-end locally with real recorded speech through the full path (browser →
+gateway → Groq → back), with audit logging on every call.
