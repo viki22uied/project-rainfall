@@ -33,6 +33,9 @@ const ACTIONS = {
   socio:         { pii: false, svc: 'ANALYTICS', path: '/sociodemographic',                 method: 'GET'  },
   forecast:      { pii: false, svc: 'ANALYTICS', path: '/forecast?key=crime_type',          method: 'GET'  },
   decision:      { pii: true,  svc: 'ANALYTICS', path: '/decision-support',                 method: 'GET', queryArg: 'case_id' },
+  anomaly:       { pii: false, svc: 'ANALYTICS', path: '/anomaly?key=crime_type',            method: 'GET'  },
+  timeline:      { pii: true,  svc: 'ANALYTICS', path: '/timeline',                          method: 'GET', queryArg: 'case_id' },
+  leads:         { pii: true,  svc: 'ANALYTICS', path: '/leads',                             method: 'GET', queryArg: 'case_id' },
   seal:          { pii: false, svc: 'LEGAL',     path: '/seal',                             method: 'POST', bodyArg: 'finding' },
 };
 

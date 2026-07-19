@@ -24,3 +24,12 @@ def load_persons():
 
 def load_districts():
     return [r["Districts"] for r in _zcql("SELECT district_name, total_cases FROM Districts")]
+
+
+def load_audit_log(case_id):
+    """AI-action events for one case, for the case timeline. case_ids is a JSON
+    array string on AuditLog, so filter with a LIKE on its quoted form."""
+    safe = case_id.replace("'", "''")
+    return [r["AuditLog"] for r in _zcql(
+        f"SELECT seq, ts, action, actor_role, decision, case_ids FROM AuditLog "
+        f"WHERE case_ids LIKE '%\"{safe}\"%' ORDER BY seq")]

@@ -506,6 +506,33 @@ async function liveIntent(qRaw) {
           ${trail([L("Live: analytics AppSail /decision-support", "ನೇರ: analytics AppSail /decision-support"), L("Similarity = shared MO features (entry, weapon, target, time)", "ಹೋಲಿಕೆ = ಹಂಚಿದ MO ಲಕ್ಷಣಗಳು")], "live · §63")}</div>`,
         speak: data.summary };
     }
+    if (/anomal|outlier|spike|unusual|ಅಸಂಗತ|ಅಸಾಧಾರಣ/.test(q)) {
+      const { data } = await api("anomaly");
+      const rows = data.anomalies.slice(0, 6).map(a => `<tr><td>${esc(a.key)}</td><td>${esc(a.month)}</td><td class="num">${a.count}</td><td class="num">z=${a.z_score}</td></tr>`).join("");
+      return { html: `<div class="bubble"><p>${L("Anomaly detection — months where a crime-type count deviates sharply (z ≥ 2) from its own baseline:", "ಅಸಂಗತ ಪತ್ತೆ — ಒಂದು ಅಪರಾಧ ಬಗೆಯ ಎಣಿಕೆ ತನ್ನ ಆಧಾರರೇಖೆಯಿಂದ ತೀವ್ರವಾಗಿ ವಿಚಲಿತವಾದ ತಿಂಗಳುಗಳು:")}</p>
+          <div class="record"><table><thead><tr><th>${L("Type", "ಬಗೆ")}</th><th>${L("Month", "ತಿಂಗಳು")}</th><th>${L("Count", "ಎಣಿಕೆ")}</th><th>${L("Deviation", "ವಿಚಲನೆ")}</th></tr></thead><tbody>${rows || `<tr><td colspan="4">${L("No anomalies detected.", "ಯಾವುದೇ ಅಸಂಗತತೆ ಪತ್ತೆಯಾಗಿಲ್ಲ.")}</td></tr>`}</tbody></table></div>
+          ${trail([L("Live: analytics AppSail /anomaly", "ನೇರ: analytics AppSail /anomaly"), L("z-score vs monthly baseline per crime type", "ಪ್ರತಿ ಬಗೆಗೆ ಮಾಸಿಕ ಆಧಾರರೇಖೆಯ z-ಸ್ಕೋರ್")], "live · §63")}</div>`,
+        speak: L("Anomaly scan complete.", "ಅಸಂಗತ ಸ್ಕ್ಯಾನ್ ಪೂರ್ಣಗೊಂಡಿದೆ.") };
+    }
+    if (/timeline|case history|chronolog|ಕಾಲಾನುಕ್ರಮ|ಪ್ರಕರಣ ಇತಿಹಾಸ/.test(q)) {
+      const caseId = (qRaw.match(/C-\d+/i) || ["C-5001"])[0].toUpperCase();
+      const { data } = await api("timeline", { case_id: caseId });
+      const rows = (data.timeline || []).map(e => `<tr><td class="mono">${esc(e.ts || "")}</td><td>${esc(e.type)}</td><td>${esc(e.detail)}</td></tr>`).join("");
+      return { html: `<div class="bubble"><p>${L("Timeline for case", "ಪ್ರಕರಣದ ಕಾಲಾನುಕ್ರಮ")} <b>${esc(caseId)}</b>:</p>
+          <div class="record"><table><thead><tr><th>${L("When", "ಯಾವಾಗ")}</th><th>${L("Event", "ಘಟನೆ")}</th><th>${L("Detail", "ವಿವರ")}</th></tr></thead><tbody>${rows || `<tr><td colspan="3">${L("No events on file.", "ಯಾವುದೇ ಘಟನೆಗಳಿಲ್ಲ.")}</td></tr>`}</tbody></table></div>
+          ${trail([L("Live: analytics AppSail /timeline", "ನೇರ: analytics AppSail /timeline"), L("FIR + person links + AI actions from the hash-chained audit log", "FIR + ವ್ಯಕ್ತಿ ಲಿಂಕ್‌ಗಳು + AI ಕ್ರಿಯೆಗಳು")], "live · §63")}</div>`,
+        speak: L("Case timeline retrieved.", "ಪ್ರಕರಣ ಕಾಲಾನುಕ್ರಮ ಪಡೆಯಲಾಗಿದೆ.") };
+    }
+    if (/investigative.lead|next step|what should i (do|investigate)|recommend|ಮುಂದಿನ ಹೆಜ್ಜೆ|ಶಿಫಾರಸು/.test(q)) {
+      const caseId = (qRaw.match(/C-\d+/i) || ["C-5001"])[0].toUpperCase();
+      const { data } = await api("leads", { case_id: caseId });
+      const prioChip = p => p === "high" ? "rust" : p === "medium" ? "amber" : "forest";
+      const rows = (data.leads || []).map(l => `<tr><td><span class="chip ${prioChip(l.priority)}"><span class="dot"></span>${esc(l.priority)}</span></td><td>${esc(l.action)}</td></tr>`).join("");
+      return { html: `<div class="bubble"><p>${L("Investigative leads for case", "ಪ್ರಕರಣಕ್ಕೆ ತನಿಖಾ ಸುಳಿವುಗಳು")} <b>${esc(caseId)}</b> ${L("(synthesized from MO similarity, risk scoring, and anomaly signals)", "(MO ಹೋಲಿಕೆ, ಅಪಾಯ ಸ್ಕೋರಿಂಗ್ ಮತ್ತು ಅಸಂಗತ ಸಂಕೇತಗಳಿಂದ)")}:</p>
+          <div class="record"><table><thead><tr><th>${L("Priority", "ಆದ್ಯತೆ")}</th><th>${L("Suggested action", "ಸೂಚಿತ ಕ್ರಮ")}</th></tr></thead><tbody>${rows}</tbody></table></div>
+          ${trail([L("Live: analytics AppSail /leads — synthesis over existing ER/MO/risk outputs, not new ML", "ನೇರ: analytics AppSail /leads"), L("Human confirms every lead before acting on it", "ಪ್ರತಿ ಸುಳಿವನ್ನೂ ಕ್ರಮಕ್ಕೂ ಮೊದಲು ಮಾನವ ದೃಢೀಕರಿಸುತ್ತಾರೆ")], "live · §63")}</div>`,
+        speak: L("Investigative leads generated.", "ತನಿಖಾ ಸುಳಿವುಗಳನ್ನು ರಚಿಸಲಾಗಿದೆ.") };
+    }
   } catch (_) { return null; } // denied or offline → fall back to curated route
   return null;
 }

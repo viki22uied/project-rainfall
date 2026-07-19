@@ -3,6 +3,9 @@ from analytics.risk import risk_score
 from analytics.forecast import forecast
 from analytics.sociodemographic import age_band, urbanization_overlay
 from analytics.decision_support import similar_cases, case_summary
+from analytics.anomaly import detect_anomalies
+from analytics.timeline import build_timeline
+from analytics.leads import generate_leads
 
 
 class TestRisk(unittest.TestCase):
@@ -55,6 +58,45 @@ class TestDecisionSupport(unittest.TestCase):
         self.assertEqual(out[0]["case_id"], "X")
         self.assertEqual(out[0]["similarity"], 100)
         self.assertIn("100%", case_summary(target, out))
+
+
+class TestAnomaly(unittest.TestCase):
+    def test_spike_month_flagged_normal_months_not(self):
+        cases = []
+        for month, count in (("2025-01", 2), ("2025-02", 2), ("2025-03", 2),
+                              ("2025-04", 2), ("2025-05", 2), ("2025-06", 2), ("2025-07", 20)):
+            cases += [{"incident_date": f"{month}-05", "crime_type": "Robbery"}] * count
+        out = detect_anomalies(cases, key="crime_type")
+        self.assertEqual(out[0]["month"], "2025-07")
+        self.assertGreaterEqual(out[0]["z_score"], 2.0)
+
+    def test_flat_series_has_no_anomalies(self):
+        cases = []
+        for month in ("2025-01", "2025-02", "2025-03"):
+            cases += [{"incident_date": f"{month}-05", "crime_type": "Theft"}] * 3
+        self.assertEqual(detect_anomalies(cases, key="crime_type"), [])
+
+
+class TestTimeline(unittest.TestCase):
+    def test_events_sorted_chronologically(self):
+        case = {"incident_date": "2025-03-01", "crime_type": "Burglary", "district_name": "Ballari"}
+        cps = [{"role_in_case": "victim", "person_id": "P1"}]
+        audit = [{"ts": "2025-03-02 10:00:00", "action": "mo_clusters", "actor_role": "analyst", "decision": "allowed"}]
+        out = build_timeline(case, cps, audit)
+        self.assertEqual(out[0]["type"], "fir_filed")
+        self.assertEqual(out[-1]["type"], "ai_action")
+
+
+class TestLeads(unittest.TestCase):
+    def test_high_risk_accused_yields_high_priority_lead(self):
+        case = {"case_id": "C1", "status": "Unsolved", "crime_type": "Robbery"}
+        leads = generate_leads(case, similar=[], accused_risks=[("P1", {"score": 85, "districts": ["A", "B"]})], anomalies=[])
+        self.assertEqual(leads[0]["priority"], "high")
+
+    def test_no_signal_falls_back_to_low_priority_default(self):
+        case = {"case_id": "C1", "status": "Solved", "crime_type": "Theft"}
+        leads = generate_leads(case, similar=[], accused_risks=[], anomalies=[])
+        self.assertEqual(leads, [{"priority": "low", "action": "No strong signals — continue standard investigation steps."}])
 
 
 if __name__ == "__main__":
