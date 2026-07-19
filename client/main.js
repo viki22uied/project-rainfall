@@ -622,21 +622,39 @@ function renderPatterns() {
     <div class="pattern">
       <div class="ph"><h3>${esc(c.id)}</h3><span class="chip rust"><span class="dot"></span>${c.cases.length} cases</span></div>
       <dl class="sig">${Object.entries(c.sig).map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
-      <div class="map" data-districts="${c.districts.length}"></div>
-      <div class="footer"><span class="chip amber">cohesion ${c.score}%</span> ${esc(c.crime)} · ${c.districts.length} districts</div>
+      <div class="map" data-cases='${esc(JSON.stringify(c.cases))}'></div>
+      <div class="footer"><span class="chip amber">cohesion ${c.score}%</span> ${esc(c.crime)} · ${c.districts.length} districts
+        <button class="link-btn" data-district="${esc(c.districts[0] || "")}">${L("View on hotspot map →", "ಹಾಟ್‌ಸ್ಪಾಟ್ ನಕ್ಷೆಯಲ್ಲಿ ನೋಡಿ →")}</button>
+      </div>
     </div>`).join("");
-  // scatter slow-pulsing hotspots on each mini-map
+
+  // One clickable pip per real case in the cluster — click asks the console for that
+  // case's summary (reuses the existing decision-support intent, no new backend call).
+  // Laid out in a wrapping grid, not absolute-scattered: random positions could overlap
+  // and swallow clicks meant for the pip underneath.
   $$("#patterns .map").forEach((map) => {
-    const n = +map.dataset.districts;
-    for (let i = 0; i < n; i++) {
-      const p = document.createElement("div");
-      p.className = "ping";
-      p.style.left = (12 + Math.random() * 76) + "%";
-      p.style.top = (16 + Math.random() * 64) + "%";
-      p.style.animationDelay = (Math.random() * 2).toFixed(2) + "s";
+    const cases = JSON.parse(map.dataset.cases || "[]");
+    cases.forEach((caseId, i) => {
+      const p = document.createElement("button");
+      p.className = "ping-pip";
+      p.type = "button";
+      p.title = caseId;
+      p.setAttribute("aria-label", `${L("View case", "ಪ್ರಕರಣ ವೀಕ್ಷಿಸಿ")} ${caseId}`);
+      p.style.animationDelay = ((i % 5) * 0.4).toFixed(2) + "s";
+      p.addEventListener("click", () => {
+        switchView("console");
+        $("#q").value = `Case summary for ${caseId}`;
+        ask();
+      });
       map.appendChild(p);
-    }
+    });
   });
+
+  $$("#patterns .link-btn").forEach((btn) => btn.addEventListener("click", () => {
+    const district = btn.dataset.district;
+    switchView("hotspots");
+    setTimeout(() => { if (district) selectDistrict(district); }, 60); // after Leaflet lazy-inits
+  }));
 }
 
 /* ============================ hotspot map (Leaflet + OSM, vendored) ============================ */
