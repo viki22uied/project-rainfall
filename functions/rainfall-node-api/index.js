@@ -1,7 +1,7 @@
 const catalyst = require('zcatalyst-sdk-node');
 const { decideAccess, buildScopeFilter, maskPerson } = require('./lib/rbac');
 const { buildAuditRow } = require('./lib/audit');
-const { canRunPiiAction, withServerAttribution } = require('./lib/actions');
+const { canRunPiiAction, withServerAttribution, withQueryArg } = require('./lib/actions');
 
 // resource -> Data Store table, and which scope columns actually exist on it.
 const RESOURCE = {
@@ -32,6 +32,7 @@ const ACTIONS = {
   risk:          { pii: true,  svc: 'ANALYTICS', path: '/risk',                             method: 'GET'  },
   socio:         { pii: false, svc: 'ANALYTICS', path: '/sociodemographic',                 method: 'GET'  },
   forecast:      { pii: false, svc: 'ANALYTICS', path: '/forecast?key=crime_type',          method: 'GET'  },
+  decision:      { pii: true,  svc: 'ANALYTICS', path: '/decision-support',                 method: 'GET', queryArg: 'case_id' },
   seal:          { pii: false, svc: 'LEGAL',     path: '/seal',                             method: 'POST', bodyArg: 'finding' },
 };
 
@@ -41,7 +42,10 @@ async function callAppsail(def, body) {
     headers: body ? { 'Content-Type': 'application/json' } : {},
     body: body ? JSON.stringify(body) : undefined,
   });
-  if (!res.ok) throw new Error(`appsail ${def.svc} ${res.status}`);
+  if (!res.ok) {
+    const reason = await res.json().catch(() => null);
+    throw new Error((reason && reason.error) || `appsail ${def.svc} ${res.status}`);
+  }
   return res.json();
 }
 
@@ -129,8 +133,54 @@ module.exports = async (context, basicIO) => {
       const seq = await writeAudit(app, zcql, user, 'transcribe', { decision: 'allowed', reason: '', maskPII: false });
       return respond('success', { text, audit_seq: seq });
     }
+    if (action === 'network') {
+      // Criminal network graph (PRD #6): built from the SAME role-scoped case set the
+      // `cases` resource already computes — an investigator sees their own station's
+      // network, a supervisor their own district, an analyst everything (masked). No
+      // case-level network for policymaker: aggregates only, never individual PII.
+      if (user.role === 'policymaker') {
+        const denied = { decision: 'denied', reason: 'policymaker: aggregates only, no case-level network', maskPII: false, scope: null };
+        const seq = await writeAudit(app, zcql, user, 'network', denied);
+        return respond('failure', { error: 'access denied', reason: denied.reason, audit_seq: seq });
+      }
+      const verdict = decideAccess(user, { resource: 'cases', elevated });
+      if (verdict.decision === 'denied') {
+        const seq = await writeAudit(app, zcql, user, 'network', verdict);
+        return respond('failure', { error: 'access denied', reason: verdict.reason, audit_seq: seq });
+      }
+      const scopeKeys = Object.keys(verdict.scope);
+      const applicable = scopeKeys.filter(k => RESOURCE.cases.scopeCols.includes(k));
+      const where = buildScopeFilter(Object.fromEntries(applicable.map(k => [k, verdict.scope[k]])));
+      const caseRows = await zcql.executeZCQLQuery(`SELECT case_id FROM Cases${where ? ` WHERE ${where}` : ''} LIMIT 10`);
+      const caseIds = caseRows.map(r => r.Cases.case_id);
+      const nodes = caseIds.map(id => ({ id, label: id, kind: 'case' }));
+      const edges = [];
+      if (caseIds.length) {
+        const idList = caseIds.map(id => `'${id.replace(/'/g, "''")}'`).join(',');
+        const cpRows = await zcql.executeZCQLQuery(
+          `SELECT case_id, person_id, role_in_case FROM CasePersons WHERE case_id IN (${idList})`);
+        const personIds = [...new Set(cpRows.map(r => r.CasePersons.person_id))];
+        const pidList = personIds.map(id => `'${id.replace(/'/g, "''")}'`).join(',');
+        const personRows = personIds.length
+          ? await zcql.executeZCQLQuery(`SELECT person_id, name_as_recorded FROM Persons WHERE person_id IN (${pidList})`)
+          : [];
+        const nameById = Object.fromEntries(personRows.map(r => [r.Persons.person_id, r.Persons.name_as_recorded]));
+        const seenPerson = new Set();
+        for (const r of cpRows) {
+          const cp = r.CasePersons;
+          const kind = ['accused', 'victim', 'witness'].includes(cp.role_in_case) ? cp.role_in_case : 'witness';
+          if (!seenPerson.has(cp.person_id)) {
+            seenPerson.add(cp.person_id);
+            nodes.push({ id: cp.person_id, label: verdict.maskPII ? '•••' : (nameById[cp.person_id] || cp.person_id), kind });
+          }
+          edges.push({ a: cp.person_id, b: cp.case_id, rel: cp.role_in_case });
+        }
+      }
+      const seq = await writeAudit(app, zcql, user, 'network', { decision: verdict.decision, reason: '', maskPII: verdict.maskPII }, caseIds);
+      return respond('success', { network: { nodes, edges }, audit_seq: seq });
+    }
     if (action && ACTIONS[action]) {
-      const def = ACTIONS[action];
+      let def = ACTIONS[action];
       // Identity-level ML (pii) runs over the WHOLE Data Store, so it exceeds the row scope of
       // investigator (own station) and policymaker (aggregates only). Restrict it to the
       // cross-case roles. Aggregate ML (mo_clusters, socio, forecast) stays open to all.
@@ -138,6 +188,10 @@ module.exports = async (context, basicIO) => {
         const denied = { decision: 'denied', reason: `${user.role}: identity-level ML is restricted to analyst/supervisor`, maskPII: false, scope: null };
         const seq = await writeAudit(app, zcql, user, action, denied);
         return respond('failure', { error: 'access denied', reason: denied.reason, audit_seq: seq });
+      }
+      if (def.queryArg) {
+        def = withQueryArg(def, basicIO.getArgument(def.queryArg));
+        if (!def) return respond('failure', { error: `missing ${ACTIONS[action].queryArg}` });
       }
       let body;
       if (def.bodyArg) { try { body = JSON.parse(basicIO.getArgument(def.bodyArg) || '{}'); } catch (_) { body = {}; } }

@@ -224,6 +224,11 @@ async function loadLive() {
     }
   } catch (e) { if (e.denied) DATA.matches = []; /* role denied → show none; offline → keep sample */ }
 
+  try {
+    const { network } = await api("network");
+    DATA.network = layoutNetwork(network.nodes, network.edges);
+  } catch (e) { if (e.denied) DATA.network = { nodes: [], edges: [] }; /* policymaker → empty; offline → keep sample */ }
+
   renderStats(); renderMatches(); renderPatterns(); renderNetwork();
   $("#erBadge").textContent = DATA.matches.length;
   renderLiveBadge();
@@ -276,8 +281,8 @@ function renderStats() {
 
 /* ============================ query console ============================ */
 const SUGGEST = {
-  en: ["Who is the accused in C-5001?", "Show chain-snatching hotspots", "Any serial pattern this month?", "Risk profile of PrakashKumar"],
-  kn: ["C-5001 ರಲ್ಲಿ ಆರೋಪಿ ಯಾರು?", "ಚೈನ್ ಸ್ನ್ಯಾಚಿಂಗ್ ಹಾಟ್‌ಸ್ಪಾಟ್‌ಗಳು", "ಈ ತಿಂಗಳು ಸರಣಿ ಮಾದರಿ ಇದೆಯೇ?", "ಪ್ರಕಾಶ್ ಕುಮಾರ್ ಅಪಾಯ ಪ್ರೊಫೈಲ್"],
+  en: ["Who is the accused in C-5001?", "Show chain-snatching hotspots", "Any serial pattern this month?", "Risk profile of PrakashKumar", "Case summary for C-5001"],
+  kn: ["C-5001 ರಲ್ಲಿ ಆರೋಪಿ ಯಾರು?", "ಚೈನ್ ಸ್ನ್ಯಾಚಿಂಗ್ ಹಾಟ್‌ಸ್ಪಾಟ್‌ಗಳು", "ಈ ತಿಂಗಳು ಸರಣಿ ಮಾದರಿ ಇದೆಯೇ?", "ಪ್ರಕಾಶ್ ಕುಮಾರ್ ಅಪಾಯ ಪ್ರೊಫೈಲ್", "C-5001 ಪ್ರಕರಣ ಸಾರಾಂಶ"],
 };
 function renderSuggest() {
   $("#suggest").innerHTML = SUGGEST[state.lang].map((q) => `<button class="btn ghost">${esc(q)}</button>`).join("");
@@ -489,6 +494,18 @@ async function liveIntent(qRaw) {
           ${trail([L("Live: analytics AppSail /sociodemographic", "ನೇರ: analytics AppSail /sociodemographic"), L("Distribution over accused across all cases", "ಎಲ್ಲಾ ಪ್ರಕರಣಗಳ ಆರೋಪಿಗಳ ವಿತರಣೆ")], "live · §63")}</div>`,
         speak: L("Socio-demographic correlation computed live.", "ಸಾಮಾಜಿಕ-ಜನಸಂಖ್ಯಾ ಸಂಬಂಧ ನೇರವಾಗಿ.") };
     }
+    if (/decision.support|case summary|similar case|similar.mo|ನಿರ್ಧಾರ|ಪ್ರಕರಣ ಸಾರಾಂಶ|ಹೋಲುವ ಪ್ರಕರಣ/.test(q)) {
+      const caseId = (qRaw.match(/C-\d+/i) || ["C-5001"])[0].toUpperCase();
+      const { data } = await api("decision", { case_id: caseId });
+      const rows = (data.similar || []).map(s => `<tr><td class="mono">${esc(s.case_id)}</td><td class="num">${s.similarity}%</td>
+        <td>${esc((s.shared_features || []).join(", "))}</td><td>${esc(s.district || "")}</td>
+        <td><span class="chip ${s.status === "Unsolved" ? "rust" : "forest"}"><span class="dot"></span>${esc(s.status || "")}</span></td></tr>`).join("");
+      return { html: `<div class="bubble"><p>${esc(data.summary)}</p>
+          ${rows ? `<div class="record"><div class="rhead"><b>${L("Similar-MO cases", "ಹೋಲುವ MO ಪ್ರಕರಣಗಳು")}</b></div>
+          <table><thead><tr><th>${L("Case", "ಪ್ರಕರಣ")}</th><th>${L("Match", "ಹೊಂದಾಣಿಕೆ")}</th><th>${L("Shared features", "ಹಂಚಿದ ಲಕ್ಷಣಗಳು")}</th><th>${L("District", "ಜಿಲ್ಲೆ")}</th><th>${L("Status", "ಸ್ಥಿತಿ")}</th></tr></thead><tbody>${rows}</tbody></table></div>` : ""}
+          ${trail([L("Live: analytics AppSail /decision-support", "ನೇರ: analytics AppSail /decision-support"), L("Similarity = shared MO features (entry, weapon, target, time)", "ಹೋಲಿಕೆ = ಹಂಚಿದ MO ಲಕ್ಷಣಗಳು")], "live · §63")}</div>`,
+        speak: data.summary };
+    }
   } catch (_) { return null; } // denied or offline → fall back to curated route
   return null;
 }
@@ -685,9 +702,22 @@ async function selectDistrict(name) {
 }
 
 /* ============================ criminal network ============================ */
+// Live network data (nodes/edges) carries no layout — cases sit on an inner ring, the
+// people linked to them on an outer ring, evenly spaced. Simple, legible, no physics needed.
+function layoutNetwork(nodes, edges) {
+  const cases = nodes.filter((n) => n.kind === "case");
+  const people = nodes.filter((n) => n.kind !== "case");
+  const ring = (items, r) => items.map((n, i) => ({
+    ...n, x: 50 + r * Math.cos((2 * Math.PI * i) / Math.max(items.length, 1)),
+    y: 50 + r * Math.sin((2 * Math.PI * i) / Math.max(items.length, 1)),
+  }));
+  return { nodes: [...ring(cases, 20), ...ring(people, 40)], edges };
+}
+
 const NET_KIND = {
   accused:  { cls: "n-accused",  lab: () => L("Accused", "ಆರೋಪಿ") },
   victim:   { cls: "n-victim",   lab: () => L("Victim", "ಸಂತ್ರಸ್ತ") },
+  witness:  { cls: "n-witness",  lab: () => L("Witness", "ಸಾಕ್ಷಿ") },
   case:     { cls: "n-case",     lab: () => L("Case", "ಪ್ರಕರಣ") },
   cluster:  { cls: "n-cluster",  lab: () => L("Serial cluster", "ಸರಣಿ ಕ್ಲಸ್ಟರ್") },
 };

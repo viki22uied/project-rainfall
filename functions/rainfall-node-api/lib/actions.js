@@ -14,4 +14,13 @@ function withServerAttribution(action, body, user) {
   return { ...body, decided_by: user.auth_email };
 }
 
-module.exports = { PII_ML_ROLES, canRunPiiAction, withServerAttribution };
+// Some actions (decision-support) take one dynamic value appended as a query param.
+// Returns null when the required arg is missing, so the caller can respond with a clear
+// error rather than proxying a malformed request to AppSail.
+function withQueryArg(def, value) {
+  if (!def.queryArg) return def;
+  if (!value) return null;
+  return { ...def, path: `${def.path}?${def.queryArg}=${encodeURIComponent(value)}` };
+}
+
+module.exports = { PII_ML_ROLES, canRunPiiAction, withServerAttribution, withQueryArg };

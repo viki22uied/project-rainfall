@@ -345,6 +345,7 @@ select.control { padding-right: 8px; }
 .netnode circle { stroke: var(--panel); stroke-width: .6; cursor: default; }
 .n-accused i, .n-accused circle { background: var(--rust); fill: var(--rust); }
 .n-victim i,  .n-victim circle  { background: var(--amber); fill: var(--amber); }
+.n-witness i, .n-witness circle { background: var(--text-3); fill: var(--text-3); }
 .n-case i,    .n-case circle    { background: var(--olive); fill: var(--olive); }
 .n-cluster i, .n-cluster circle { background: var(--forest); fill: var(--forest); }
 @keyframes netsettle { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: scale(1); } }
