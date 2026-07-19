@@ -869,7 +869,8 @@ async function toggleVoice() {
       $("#q").value = text;
       ask();
     } catch (e) {
-      toast(e.denied ? `${L("Voice error", "ಧ್ವನಿ ದೋಷ")}: ${e.message}` : L("Couldn't transcribe — check your connection and try again.", "ಪರಿವರ್ತಿಸಲಾಗಲಿಲ್ಲ — ಸಂಪರ್ಕ ಪರಿಶೀಲಿಸಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ."));
+      console.error("voice transcription failed:", e);
+      toast(`${L("Voice error", "ಧ್ವನಿ ದೋಷ")}: ${e.message || e}`);
     }
   };
   mediaRecorder.start();
